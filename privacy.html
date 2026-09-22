@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy Policy — Dungeons in the Night</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #120e0c;
+      --fg: #efe6d8;
+      --muted: #c4b8a5;
+      --gold: #d4a574;
+      --carved: #f0d7a0;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: Cinzel, "Palatino Linotype", Palatino, serif;
+      color: var(--fg);
+      background: var(--bg) url("app/src/main/res/drawable-nodpi/title_night.jpg") center / cover no-repeat fixed;
+    }
+    .veil {
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, rgba(18,14,12,.28) 0%, rgba(18,14,12,.55) 45%, rgba(18,14,12,.82) 100%);
+      padding: 48px 20px 80px;
+    }
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      background: rgba(18, 14, 12, 0.72);
+      border: 1px solid rgba(212, 165, 116, 0.28);
+      box-shadow: 0 24px 60px rgba(0,0,0,.55), inset 0 0 0 1px rgba(0,0,0,.4);
+      padding: 36px 32px 48px;
+    }
+    .mark {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .mark img {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      box-shadow: 0 0 0 1px rgba(212,165,116,.4);
+    }
+    p.kicker {
+      margin: 0;
+      letter-spacing: .28em;
+      text-transform: uppercase;
+      font-size: 11px;
+      color: var(--gold);
+    }
+    h1 {
+      margin: 8px 0 6px;
+      font-size: clamp(28px, 5vw, 42px);
+      font-weight: 700;
+      letter-spacing: .04em;
+      line-height: 1.05;
+      text-shadow: 0 2px 0 #1a1208, 0 8px 18px #000;
+    }
+    h1 span { display: block; color: var(--muted); font-size: .78em; }
+    .meta {
+      color: var(--gold);
+      font-size: 13px;
+      margin: 0 0 28px;
+    }
+    h2 {
+      margin: 28px 0 10px;
+      font-size: 18px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--carved);
+    }
+    p, li { color: var(--muted); line-height: 1.65; font-size: 15px; }
+    p strong, li strong { color: var(--fg); font-weight: 600; }
+    ul { padding-left: 1.2em; }
+    a { color: var(--gold); }
+    footer {
+      margin-top: 36px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(239,230,216,.12);
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+  </style>
+</head>
+<body>
+  <div class="veil">
+    <main>
+      <div class="mark">
+        <img src="icon-512.png" alt="Dungeons in the Night icon" />
+        <p class="kicker">A torchlit descent</p>
+      </div>
+      <h1>Privacy Policy<span>Dungeons in the Night</span></h1>
+      <p class="meta">Effective 22 September 2026 · Package com.dungeonsnight.game · Version 1.0.0</p>
+
+      <p>
+        This Policy is for the Android game <strong>Dungeons in the Night</strong>
+        (the “Game”). It is written for the thing the Game actually does:
+        a knight, three halls, slimes, bats, a dragon, and a save file that never leaves the phone.
+      </p>
+
+      <h2>1. Who runs this</h2>
+      <p>
+        The Game is published under the package name <strong>com.dungeonsnight.game</strong>.
+        Contact for this Policy: <a href="mailto:aleksandr.arter@gmail.com">aleksandr.arter@gmail.com</a>.
+      </p>
+
+      <h2>2. The short version</h2>
+      <p>
+        <strong>We do not collect personal data.</strong>
+        The Game has no account, no ads, no analytics, no crash reporter, and
+        <strong>no internet permission</strong>. It cannot phone home.
+        Play on the subway. Play in a cave. The halls stay on the device.
+      </p>
+
+      <h2>3. What stays on your phone</h2>
+      <p>
+        Progress is written only to Android local storage (SharedPreferences),
+        in a private file named <strong>dungeons_in_the_night</strong>. That file holds:
+      </p>
+      <ul>
+        <li><strong>XP</strong> — experience earned in the halls</li>
+        <li><strong>Unlocked hall</strong> — which of the three levels you may enter</li>
+        <li><strong>Coin count</strong> — coins taken from the dark</li>
+        <li><strong>Volume</strong> — the dungeon music slider</li>
+        <li><strong>Language</strong> — English, Deutsch, Français, 中文, or 日本語</li>
+      </ul>
+      <p>
+        No name, email, location, contacts, photos, advertising ID, or payment data
+        is written there. Uninstalling the Game deletes this file.
+      </p>
+
+      <h2>4. Permissions</h2>
+      <p>
+        The Game requests <strong>no dangerous permissions</strong> and
+        <strong>no INTERNET</strong> permission. Landscape orientation, sound, and
+        on-screen controls run on the device alone.
+      </p>
+
+      <h2>5. Android backup</h2>
+      <p>
+        Android may, if <em>you</em> turned on device backup in system settings,
+        copy app data into <em>your</em> Google account. That is the operating system,
+        not the Game. We do not receive that copy. Turn backup off, or clear the
+        app’s storage, if you do not want a local save to follow the phone.
+      </p>
+
+      <h2>6. Children</h2>
+      <p>
+        The Game does not knowingly collect data from children, because it does
+        not collect data from anyone. It is a fantasy action game with combat
+        against slimes, bats, and a dragon. Parents decide whether that tone fits.
+      </p>
+
+      <h2>7. Third parties</h2>
+      <p>
+        No ad network. No analytics SDK. No social login. No cloud save of ours.
+        Google Play itself is Google’s store; their rules apply when you download
+        or update the Game from Play. This Policy covers the Game after it is
+        installed on the device.
+      </p>
+
+      <h2>8. Your choices</h2>
+      <ul>
+        <li>Change language and volume in Settings. That stays on the device.</li>
+        <li>Clear the app’s storage in Android settings to reset XP, halls, and coins.</li>
+        <li>Uninstall the Game to remove it and its local save.</li>
+      </ul>
+
+      <h2>9. Changes</h2>
+      <p>
+        If the Game ever starts talking to a server — it does not, today —
+        this page will be updated before that ships, and the date above will move.
+        The current text matches version <strong>1.0.0</strong>.
+      </p>
+
+      <h2>10. Contact</h2>
+      <p>
+        Questions about this Policy: <a href="mailto:aleksandr.arter@gmail.com">aleksandr.arter@gmail.com</a>.
+      </p>
+
+      <footer>The torch is the only law left in these halls.</footer>
+    </main>
+  </div>
+</body>
+</html>

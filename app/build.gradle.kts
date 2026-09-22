@@ -16,8 +16,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+        }
         release {
             isMinifyEnabled = false
+            // Sideload-friendly: debug key so the APK installs without a Play Store keystore.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 

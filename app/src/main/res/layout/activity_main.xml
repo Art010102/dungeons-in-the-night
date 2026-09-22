@@ -46,22 +46,102 @@
         android:textColor="@color/fg"
         android:visibility="gone" />
 
-    <!-- Touch -->
-    <LinearLayout
+    <!-- Touch: D-pad left, jump + attack right -->
+    <FrameLayout
         android:id="@+id/touchBar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_margin="12dp"
-        android:orientation="horizontal"
+        android:layout_height="match_parent"
         android:visibility="gone">
-        <Button android:id="@+id/btnLeft" style="@style/Pad" android:text="@string/left" />
-        <Button android:id="@+id/btnRight" style="@style/Pad" android:text="@string/right" />
-        <View android:layout_width="12dp" android:layout_height="1dp" />
-        <Button android:id="@+id/btnDrop" style="@style/Pad" android:text="@string/drop" />
-        <Button android:id="@+id/btnJump" style="@style/Pad" android:text="@string/jump" />
-        <Button android:id="@+id/btnAttack" style="@style/Pad" android:text="@string/attack" />
-    </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="168dp"
+            android:layout_height="168dp"
+            android:layout_gravity="bottom|start"
+            android:layout_marginStart="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/pad_plate">
+
+            <ImageButton
+                android:id="@+id/btnJumpDpad"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="top|center_horizontal"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/pad_circle"
+                android:contentDescription="@string/jump"
+                android:padding="12dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_arrow_up" />
+
+            <ImageButton
+                android:id="@+id/btnLeft"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="start|center_vertical"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/pad_circle"
+                android:contentDescription="@string/left"
+                android:padding="12dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_arrow_left" />
+
+            <ImageButton
+                android:id="@+id/btnRight"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/pad_circle"
+                android:contentDescription="@string/right"
+                android:padding="12dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_arrow_right" />
+
+            <ImageButton
+                android:id="@+id/btnDrop"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/pad_circle"
+                android:contentDescription="@string/drop"
+                android:padding="12dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_arrow_down" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="20dp"
+            android:gravity="bottom"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btnAttack"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/pad_circle_action"
+                android:contentDescription="@string/attack"
+                android:padding="18dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_sword" />
+
+            <ImageButton
+                android:id="@+id/btnJump"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginBottom="28dp"
+                android:background="@drawable/pad_circle_action"
+                android:contentDescription="@string/jump"
+                android:padding="14dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_arrow_up" />
+        </LinearLayout>
+    </FrameLayout>
 
     <!-- Menu -->
     <LinearLayout

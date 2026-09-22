@@ -37,6 +37,12 @@ class MainActivity : AppCompatActivity(), GameView.Listener {
     private lateinit var btnL1: Button
     private lateinit var btnL2: Button
     private lateinit var btnL3: Button
+    private var dpadJump = false
+    private var faceJump = false
+
+    private fun applyJump() {
+        game.engine.input.jumpHeld = dpadJump || faceJump
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,17 +103,10 @@ class MainActivity : AppCompatActivity(), GameView.Listener {
 
         hold(R.id.btnLeft) { game.engine.input.moveX = if (it) -1f else if (game.engine.input.moveX < 0f) 0f else game.engine.input.moveX }
         hold(R.id.btnRight) { game.engine.input.moveX = if (it) 1f else if (game.engine.input.moveX > 0f) 0f else game.engine.input.moveX }
-        hold(R.id.btnJump) { game.engine.input.jumpHeld = it }
+        hold(R.id.btnJump) { faceJump = it; applyJump() }
+        hold(R.id.btnJumpDpad) { dpadJump = it; applyJump() }
         hold(R.id.btnDrop) { game.engine.input.dropHeld = it }
-        findViewById<View>(R.id.btnAttack).setOnTouchListener { v, e ->
-            if (e.action == MotionEvent.ACTION_DOWN) {
-                v.performClick()
-                game.engine.input.attackHeld = true
-            } else if (e.action == MotionEvent.ACTION_UP || e.action == MotionEvent.ACTION_CANCEL) {
-                game.engine.input.attackHeld = false
-            }
-            true
-        }
+        hold(R.id.btnAttack) { game.engine.input.attackHeld = it }
 
         btnL1.setOnClickListener { startLevel(1) }
         btnL2.setOnClickListener { startLevel(2) }
@@ -156,6 +155,9 @@ class MainActivity : AppCompatActivity(), GameView.Listener {
         audio.stopMusic()
         game.engine.reset(1)
         game.engine.paused = false
+        dpadJump = false
+        faceJump = false
+        game.engine.input.jumpHeld = false
         showMenu()
     }
 

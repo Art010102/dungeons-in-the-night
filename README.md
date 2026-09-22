@@ -2,7 +2,7 @@
 
 Нативная Android-игра (Kotlin + Canvas). Интернет не нужен. Все спрайты, земля, музыка и уровни лежат внутри APK.
 
-Стек: **AGP 9.4.1 · Gradle 9.7.1 · Kotlin 2.4.10 · compileSdk 36**
+Стек: **AGP 9.4.1 · Gradle 9.7.1 · built-in Kotlin · compileSdk 36**
 
 ## Store-картинки (скачай из корня репо)
 

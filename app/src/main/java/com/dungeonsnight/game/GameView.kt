@@ -409,10 +409,10 @@ class GameView @JvmOverloads constructor(
     }
 }
 
-class Assets(ctx: Context) {
+class Assets(private val ctx: Context) {
     private fun load(path: String): Bitmap {
-        ctx.assets.open(path).use {
-            return BitmapFactory.decodeStream(it)
+        return ctx.assets.open(path).use { stream ->
+            BitmapFactory.decodeStream(stream)
                 ?: throw IllegalStateException("missing $path")
         }
     }

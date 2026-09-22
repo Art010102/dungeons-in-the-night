@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dungeons in the Night</title>
+  <meta name="description" content="A knight. Three halls. Slimes, bats, a dragon. Dark fantasy, fully offline." />
+  <meta property="og:title" content="Dungeons in the Night" />
+  <meta property="og:description" content="Torchlit action on your phone. No account. No internet. A dragon on every last banner." />
+  <meta property="og:image" content="banner-1024x500.png" />
+  <link rel="icon" href="icon-512.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #120e0c;
+      --fg: #efe6d8;
+      --muted: #c4b8a5;
+      --gold: #d4a574;
+      --carved: #f0d7a0;
+      --line: rgba(212, 165, 116, 0.28);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: Cinzel, "Palatino Linotype", Palatino, serif;
+      color: var(--fg);
+      background: var(--bg) url("app/src/main/res/drawable-nodpi/title_night.jpg") center / cover no-repeat fixed;
+    }
+    .veil {
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, rgba(18,14,12,.22) 0%, rgba(18,14,12,.62) 38%, rgba(12,9,8,.92) 100%);
+    }
+    nav {
+      display: flex;
+      gap: 22px;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 22px 16px 0;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+    nav a { color: var(--gold); text-decoration: none; }
+    nav a:hover { color: var(--fg); }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px 80px; }
+    .hero {
+      text-align: center;
+      padding: 36px 0 28px;
+    }
+    .hero img.icon {
+      width: 88px; height: 88px; border-radius: 18px;
+      box-shadow: 0 0 0 1px var(--line), 0 18px 40px rgba(0,0,0,.55);
+    }
+    .kicker {
+      margin: 16px 0 0;
+      letter-spacing: .32em;
+      text-transform: uppercase;
+      font-size: 11px;
+      color: var(--gold);
+    }
+    h1 {
+      margin: 10px 0 8px;
+      font-size: clamp(36px, 7vw, 64px);
+      letter-spacing: .04em;
+      line-height: 1.02;
+      text-shadow: 0 2px 0 #1a1208, 0 14px 28px #000;
+    }
+    .lead {
+      max-width: 640px;
+      margin: 0 auto 22px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+    .banner {
+      width: 100%;
+      display: block;
+      border: 1px solid var(--line);
+      box-shadow: 0 24px 60px rgba(0,0,0,.5);
+    }
+    .panel {
+      margin-top: 28px;
+      background: rgba(18, 14, 12, 0.72);
+      border: 1px solid var(--line);
+      box-shadow: 0 24px 60px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.35);
+      padding: 32px 28px;
+    }
+    h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--carved);
+    }
+    p, li { color: var(--muted); line-height: 1.7; font-size: 15px; }
+    p strong, li strong { color: var(--fg); font-weight: 600; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 8px;
+    }
+    .card {
+      background: rgba(0,0,0,.28);
+      border: 1px solid rgba(239,230,216,.08);
+      padding: 18px 16px;
+    }
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--carved);
+    }
+    .roster {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+    }
+    .sprite {
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(239,230,216,.1);
+      padding: 14px 10px 16px;
+      text-align: center;
+    }
+    .sprite img {
+      width: 100%;
+      height: 110px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    .sprite p {
+      margin: 10px 0 0;
+      font-size: 12px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+    .btn {
+      display: inline-block;
+      padding: 12px 22px;
+      border: 1px solid var(--gold);
+      color: var(--carved);
+      text-decoration: none;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      font-size: 12px;
+      background: rgba(80, 52, 28, .35);
+    }
+    .btn:hover { background: rgba(120, 78, 40, .45); color: #fff; }
+    footer {
+      margin-top: 36px;
+      text-align: center;
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    footer a { color: var(--gold); }
+  </style>
+</head>
+<body>
+  <div class="veil">
+    <nav>
+      <a href="#halls">Halls</a>
+      <a href="#combat">Combat</a>
+      <a href="#roster">Roster</a>
+      <a href="privacy.html">Privacy</a>
+    </nav>
+    <div class="wrap">
+      <header class="hero">
+        <img class="icon" src="icon-512.png" alt="Dungeons in the Night" />
+        <p class="kicker">A torchlit descent</p>
+        <h1>Dungeons in the Night</h1>
+        <p class="lead">
+          The torch is the only law left in these halls. A knight. Three caverns.
+          Slimes in the wet dark, bats off the ceiling, and a dragon on every last banner.
+          The phone runs the whole game. No account. No internet.
+        </p>
+        <div class="btns">
+          <a class="btn" href="https://play.google.com/store/apps/details?id=com.dungeonsnight.game">Google Play</a>
+          <a class="btn" href="privacy.html">Privacy Policy</a>
+        </div>
+      </header>
+
+      <img class="banner" src="banner-1024x500.png" alt="Dungeons in the Night banner" />
+
+      <section class="panel" id="halls">
+        <h2>The three halls</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Ember Halls</h3>
+            <p>The first fire, the first blood, the first dragon. Learn the stone. Spend the fireball like you mean it.</p>
+          </article>
+          <article class="card">
+            <h3>Forked Dark</h3>
+            <p>A split path and worse footing. The same hunger. Clear the first hall or this one stays shut.</p>
+          </article>
+          <article class="card">
+            <h3>Night's Crown</h3>
+            <p>The last stone, the last coin, the last beast on the gate. The night does not wait.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel" id="combat">
+        <h2>How it plays</h2>
+        <p>
+          Landscape the moment a hall opens. Pad on the left. Strike, jump, and spell on the right.
+          One cell of mana. One fireball. Eight damage. Behind the dragon sits a flask —
+          kill the beast, or kite it, steal the flask, and burn it twice.
+        </p>
+        <div class="grid">
+          <article class="card">
+            <h3>Sword & jump</h3>
+            <p>Close in. Cut. Land on heads. One-way ledges. The floor is solid relief stone to the bottom of the world.</p>
+          </article>
+          <article class="card">
+            <h3>Coins & heal</h3>
+            <p>Three spinning coins in each hall. A heal in the stone. Words rise off the floor: HP restored. Mana restored.</p>
+          </article>
+          <article class="card">
+            <h3>The dragon</h3>
+            <p>Two and a half times your height. It does not fly. Come close and it runs you down. The banner is behind it.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel" id="roster">
+        <h2>From the dark</h2>
+        <div class="roster">
+          <figure class="sprite">
+            <img src="app/src/main/assets/sprites/knight/idle.png" alt="Knight" />
+            <p>Knight</p>
+          </figure>
+          <figure class="sprite">
+            <img src="app/src/main/assets/sprites/dragon/idle.png" alt="Dragon" />
+            <p>Dragon</p>
+          </figure>
+          <figure class="sprite">
+            <img src="app/src/main/assets/sprites/slime/idle.png" alt="Slime" />
+            <p>Slime</p>
+          </figure>
+          <figure class="sprite">
+            <img src="app/src/main/assets/sprites/bat/idle.png" alt="Bat" />
+            <p>Bat</p>
+          </figure>
+          <figure class="sprite">
+            <img src="app/src/main/assets/sprites/pickups/coin.png" alt="Coin" />
+            <p>Coin</p>
+          </figure>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>On the device</h2>
+        <p>
+          <strong>Offline.</strong> No ads. No analytics. Music starts with the hall and dies when you leave it.
+          Language in Settings, no restart: English, Deutsch, Français, 中文, 日本語.
+          Package <strong>com.dungeonsnight.game</strong>. Version 1.0.0.
+        </p>
+      </section>
+
+      <footer>
+        The torch is the only law left in these halls.<br /><br />
+        <a href="privacy.html">Privacy Policy</a>
+        ·
+        <a href="mailto:michaelflensborg1992@gmail.com">michaelflensborg1992@gmail.com</a>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>

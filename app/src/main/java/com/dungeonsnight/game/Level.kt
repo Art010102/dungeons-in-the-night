@@ -9,6 +9,7 @@ const val LEVEL_COUNT = 3
 val LEVEL_NAMES = arrayOf("Ember Halls", "Forked Dark", "Night's Crown")
 
 data class EnemySpawn(val kind: String, val x: Float, val y: Float)
+data class PickupSpawn(val kind: String, val x: Float, val y: Float)
 data class Torch(val x: Float, val y: Float)
 
 class LevelData(
@@ -22,6 +23,7 @@ class LevelData(
     val flagX: Float,
     val flagY: Float,
     val enemies: List<EnemySpawn>,
+    val pickups: List<PickupSpawn>,
     val torches: List<Torch>,
 ) {
     val worldW: Float get() = cols * TILE
@@ -64,6 +66,10 @@ private fun ledge(t: ByteArray, cols: Int, rows: Int, c0: Int, r: Int, c1: Int) 
 
 private fun slime(c: Int, floor: Int) = EnemySpawn("slime", c * TILE, floor * TILE - 10f)
 private fun bat(c: Int, r: Int, extra: Float = 0f) = EnemySpawn("bat", c * TILE, r * TILE + extra)
+private fun dragon(c: Int, floor: Int) = EnemySpawn("dragon", c * TILE - 6f, floor * TILE - 35f)
+private fun heal(c: Int, floor: Int) = PickupSpawn("heal", c * TILE + 4f, floor * TILE - 14f)
+private fun mana(c: Int, floor: Int) = PickupSpawn("mana", c * TILE + 4f, floor * TILE - 14f)
+private fun coin(c: Int, floor: Int) = PickupSpawn("coin", c * TILE + 4f, floor * TILE - 12f)
 private fun torches(cols: IntArray, yRow: Int) = cols.map { Torch(it * TILE + 8f, yRow * TILE) }
 
 private fun level1(): LevelData {
@@ -92,14 +98,15 @@ private fun level1(): LevelData {
     ledge(t, cols, rows, 93, 7, 99)
     ledge(t, cols, rows, 102, 6, 108)
     fill(t, cols, rows, 113, 13, cols - 1, 14, T_SOLID)
-    fill(t, cols, rows, 118, 11, 129, 12, T_SOLID)
-    fill(t, cols, rows, 121, 10, 127, 10, T_SOLID)
+    fill(t, cols, rows, 116, 11, cols - 1, 12, T_SOLID)
+    fill(t, cols, rows, 118, 10, cols - 1, 10, T_SOLID)
     fillEarth(t, cols, rows)
     return LevelData(
         1, LEVEL_NAMES[0], cols, rows, t,
         3 * TILE + 3f, 13 * TILE - 14f,
-        123 * TILE + 2f, 10 * TILE - 26f,
-        listOf(slime(34, 13), slime(76, 11), slime(108, 13), bat(56, 4), bat(84, 3), bat(101, 3, 8f)),
+        129 * TILE + 2f, 10 * TILE - 26f,
+        listOf(slime(34, 13), slime(76, 11), slime(108, 13), bat(56, 4), bat(84, 3), bat(101, 3, 8f), dragon(122, 10)),
+        listOf(coin(12, 13), coin(52, 9), coin(86, 5), heal(114, 13), mana(127, 10)),
         torches(intArrayOf(12, 36, 55, 76, 102, 124), 6),
     )
 }
@@ -131,18 +138,19 @@ private fun level2(): LevelData {
     ledge(t, cols, rows, 118, 15, 128)
     ledge(t, cols, rows, 124, 11, 134)
     ledge(t, cols, rows, 130, 8, 140)
-    ground(t, cols, rows, 134, 12, cols - 1)
-    fill(t, cols, rows, 138, 11, 145, 11, T_SOLID)
-    fill(t, cols, rows, 140, 10, 146, 10, T_SOLID)
+    ground(t, cols, rows, 132, 12, cols - 1)
+    fill(t, cols, rows, 136, 11, cols - 1, 11, T_SOLID)
+    fill(t, cols, rows, 138, 10, cols - 1, 10, T_SOLID)
     fillEarth(t, cols, rows)
     return LevelData(
         2, LEVEL_NAMES[1], cols, rows, t,
         4 * TILE + 3f, 16 * TILE - 14f,
-        141 * TILE + 2f, 10 * TILE - 26f,
+        145 * TILE + 2f, 10 * TILE - 26f,
         listOf(
             slime(18, 16), slime(30, 22), slime(52, 22), slime(74, 20), slime(108, 23),
-            bat(40, 5), bat(56, 4), bat(88, 6), bat(126, 6),
+            bat(40, 5), bat(56, 4), bat(88, 6), bat(126, 6), dragon(141, 10),
         ),
+        listOf(coin(20, 16), coin(55, 22), coin(100, 23), heal(133, 12), mana(144, 10)),
         torches(intArrayOf(10, 28, 50), 6) + torches(intArrayOf(36, 70), 14) + torches(intArrayOf(104, 122, 140), 7),
     )
 }
@@ -176,19 +184,20 @@ private fun level3(): LevelData {
     ledge(t, cols, rows, 132, 12, 140)
     ledge(t, cols, rows, 126, 8, 132)
     ground(t, cols, rows, 136, 18, 148)
-    ground(t, cols, rows, 146, 10, cols - 1)
-    fill(t, cols, rows, 150, 9, 157, 9, T_SOLID)
-    fill(t, cols, rows, 152, 8, 158, 8, T_SOLID)
+    ground(t, cols, rows, 144, 10, cols - 1)
+    fill(t, cols, rows, 148, 9, cols - 1, 9, T_SOLID)
+    fill(t, cols, rows, 150, 8, cols - 1, 8, T_SOLID)
     ledge(t, cols, rows, 142, 13, 148)
     fillEarth(t, cols, rows)
     return LevelData(
         3, LEVEL_NAMES[2], cols, rows, t,
         4 * TILE + 3f, 24 * TILE - 14f,
-        153 * TILE + 2f, 8 * TILE - 26f,
+        157 * TILE + 2f, 8 * TILE - 26f,
         listOf(
             slime(10, 24), slime(66, 23), slime(88, 20), slime(110, 22), slime(140, 18),
-            bat(20, 5), bat(40, 3), bat(50, 2), bat(96, 8), bat(122, 5), bat(134, 6),
+            bat(20, 5), bat(40, 3), bat(50, 2), bat(96, 8), bat(122, 5), bat(134, 6), dragon(152, 8),
         ),
+        listOf(coin(10, 24), coin(66, 23), coin(120, 8), heal(145, 10), mana(156, 8)),
         torches(intArrayOf(8, 24, 48), 4) + torches(intArrayOf(66, 86, 110), 12) + torches(intArrayOf(130, 152), 5),
     )
 }

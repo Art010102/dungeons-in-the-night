@@ -11,6 +11,7 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
@@ -33,6 +34,8 @@ class GameView @JvmOverloads constructor(
     private var camReady = false
     var trauma = 0f
     private var lastHp = -1
+    private var lastMana = -1
+    private var lastCoins = -1
     private var lastPhase: Phase? = null
     private var lastPaused = false
     private val pix = Paint(Paint.ANTI_ALIAS_FLAG).apply { isFilterBitmap = false }
@@ -41,7 +44,7 @@ class GameView @JvmOverloads constructor(
     private val dst = RectF()
 
     interface Listener {
-        fun onHud(hp: Int, phase: Phase, paused: Boolean, levelName: String)
+        fun onHud(hp: Int, mana: Int, coins: Int, phase: Phase, paused: Boolean, levelName: String)
         fun onWin()
         fun onDead()
         fun onEvent(ev: GameEvent)
@@ -94,12 +97,14 @@ class GameView @JvmOverloads constructor(
             }
             trauma = max(0f, trauma - dt * 1.8f)
             val hp = engine.player.hp
+            val mana = engine.player.mana
+            val coins = engine.coins
             val phase = engine.phase
             val paused = engine.paused
             val name = engine.level.name
-            if (hp != lastHp || phase != lastPhase || paused != lastPaused) {
-                lastHp = hp; lastPhase = phase; lastPaused = paused
-                post { listener?.onHud(hp, phase, paused, name) }
+            if (hp != lastHp || mana != lastMana || coins != lastCoins || phase != lastPhase || paused != lastPaused) {
+                lastHp = hp; lastMana = mana; lastCoins = coins; lastPhase = phase; lastPaused = paused
+                post { listener?.onHud(hp, mana, coins, phase, paused, name) }
             }
             val canvas = try { holder.lockCanvas() } catch (_: Exception) { null }
             if (canvas != null) {
@@ -153,10 +158,13 @@ class GameView @JvmOverloads constructor(
         drawBackdrop(canvas, a, viewW, viewH)
         drawTiles(canvas, a, viewW, viewH)
         drawTorches(canvas)
+        drawPickups(canvas, a)
         drawFlag(canvas, a)
         drawEnemies(canvas, a)
+        drawProjectiles(canvas, a)
         drawPlayer(canvas, a)
         drawSlash(canvas, a)
+        drawFloaters(canvas)
         canvas.restore()
         // vignette
         fill.shader = android.graphics.RadialGradient(
@@ -207,22 +215,19 @@ class GameView @JvmOverloads constructor(
             if (t == T_SOLID) {
                 val shell = r < 2 || c < 2 || c >= lv.cols - 2
                 val above = lv.tileAt(c, r - 1)
-                when {
-                    shell -> sample(canvas, a.rock, c, r, x, y)
-                    above != T_SOLID -> {
-                        sample(canvas, a.grass, c, r, x, y)
-                        fill.color = Color.argb(0x47, 0x28, 0x46, 0x1C)
-                        canvas.drawRect(x, y, x + TILE, y + 3f, fill)
-                    }
-                    else -> sample(canvas, a.dirt, c, r, x, y)
+                sample(canvas, if (shell) a.rock else a.stone, c, r, x, y)
+                if (!shell && above != T_SOLID) {
+                    fill.color = Color.argb(40, 235, 220, 200)
+                    canvas.drawRect(x, y, x + TILE, y + 2f, fill)
+                    fill.color = Color.argb(70, 0, 0, 0)
+                    canvas.drawRect(x, y + TILE - 2f, x + TILE, y + TILE, fill)
                 }
             } else if (t == T_ONEWAY) {
-                fill.color = Color.parseColor("#FF5C4634")
-                canvas.drawRect(x, y, x + TILE, y + 4f, fill)
-                fill.color = Color.parseColor("#FF8A6A4A")
+                sample(canvas, a.stone, c, r, x, y)
+                fill.color = Color.argb(56, 235, 220, 200)
                 canvas.drawRect(x, y, x + TILE, y + 2f, fill)
-                fill.color = Color.argb(0x8C, 0x46, 0x6E, 0x30)
-                canvas.drawRect(x, y - 1f, x + TILE, y + 1f, fill)
+                fill.color = Color.argb(140, 0, 0, 0)
+                canvas.drawRect(x, y + 5f, x + TILE, y + TILE, fill)
             }
         }
     }
@@ -316,20 +321,71 @@ class GameView @JvmOverloads constructor(
                 val squash = if (e.anim == "attack") 0.82f else 1f
                 val dh = 18f * squash
                 drawSheet(canvas, bmp, frame, e.x + e.w / 2f - 11f + lunge, e.y + e.h - dh + 1f, 22f, dh, e.facing < 0)
+            } else if (e.kind == "dragon") {
+                bmp = when {
+                    e.dying -> a.dragonIdle
+                    e.anim == "attack" -> a.dragonAttack
+                    e.anim == "run" || abs(e.vx) > 8f -> a.dragonRun
+                    else -> a.dragonIdle
+                }
+                frame = when {
+                    e.dying -> min(3, floor(e.animT * 6f).toInt())
+                    e.anim == "attack" -> min(3, floor(e.animT * 10f).toInt())
+                    else -> (e.animT * 8).toInt() % 4
+                }
+                drawSheet(canvas, bmp, frame, e.x + e.w / 2f - 35f + lunge, e.y + e.h - 54f, 70f, 56f, e.facing < 0)
             } else {
                 bmp = if (e.dying) a.batDeath else a.batIdle
                 frame = if (e.dying) min(3, floor(e.animT * 8f).toInt()) else (e.animT * 8).toInt() % 4
                 drawSheet(canvas, bmp, frame, e.x + e.w / 2f - 11f + lunge, e.y + e.h / 2f - 9f, 22f, 18f, e.facing < 0)
             }
             pix.alpha = 255
-            if (!e.dying && e.hp < ENEMY_HP) {
-                val hx = e.x + e.w / 2f - 5f
-                val hy = e.y - 3f
-                fill.color = Color.parseColor("#5A221C")
-                canvas.drawRect(hx, hy, hx + 10f, hy + 1.5f, fill)
-                fill.color = Color.parseColor("#C45A48")
-                canvas.drawRect(hx, hy, hx + 10f * e.hp / ENEMY_HP, hy + 1.5f, fill)
+            if (!e.dying) {
+                val maxHp = if (e.kind == "dragon") DRAGON_HP else ENEMY_HP
+                if (e.hp < maxHp) {
+                    val bar = if (e.kind == "dragon") 18f else 10f
+                    val hx = e.x + e.w / 2f - bar / 2f
+                    val hy = e.y - 4f
+                    fill.color = Color.parseColor("#5A221C")
+                    canvas.drawRect(hx, hy, hx + bar, hy + 1.5f, fill)
+                    fill.color = Color.parseColor("#C45A48")
+                    canvas.drawRect(hx, hy, hx + bar * e.hp / maxHp, hy + 1.5f, fill)
+                }
             }
+        }
+    }
+
+    private fun drawPickups(canvas: Canvas, a: Assets) {
+        val now = System.currentTimeMillis()
+        for (item in engine.pickups) {
+            if (item.taken) continue
+            val bob = sin(item.bobT.toDouble()).toFloat() * 1.6f
+            if (item.kind == "coin") {
+                val frame = ((now / 140) % 4).toInt()
+                drawSheet(canvas, a.coin, frame, item.x - 2f, item.y + bob - 2f, 14f, 14f, false)
+            } else {
+                val img = if (item.kind == "heal") a.heal else a.mana
+                dst.set(item.x - 1f, item.y + bob - 2f, item.x + 13f, item.y + bob + 14f)
+                canvas.drawBitmap(img, null, dst, pix)
+            }
+        }
+    }
+
+    private fun drawProjectiles(canvas: Canvas, a: Assets) {
+        for (b in engine.projectiles) {
+            val frame = (((1.4f - b.life) * 10).toInt() % 4)
+            drawSheet(canvas, a.fireball, frame, b.x - 4f, b.y - 6f, 18f, 16f, b.vx < 0f)
+        }
+    }
+
+    private fun drawFloaters(canvas: Canvas) {
+        val text = Paint(Paint.ANTI_ALIAS_FLAG)
+        text.color = Color.parseColor("#EFE6D8")
+        text.textSize = 8f
+        text.textAlign = Paint.Align.CENTER
+        for (f in engine.floaters) {
+            text.alpha = (255f * min(1f, f.t * 1.4f)).toInt().coerceIn(0, 255)
+            canvas.drawText(f.text, f.x, f.y, text)
         }
     }
 
@@ -360,10 +416,18 @@ class Assets(ctx: Context) {
     val slimeDeath = load("sprites/slime/death.png")
     val batIdle = load("sprites/bat/idle.png")
     val batDeath = load("sprites/bat/death.png")
+    val dragonIdle = load("sprites/dragon/idle.png")
+    val dragonAttack = load("sprites/dragon/attack.png")
+    val dragonRun = load("sprites/dragon/run.png")
     val flag = load("sprites/flag/idle.png")
     val slash = load("sprites/fx/slash.png")
+    val fireball = load("sprites/fx/fireball.png")
+    val heal = load("sprites/pickups/heal.png")
+    val mana = load("sprites/pickups/mana.png")
+    val coin = load("sprites/pickups/coin.png")
     val rock = load("sprites/tiles/rock.jpg")
     val grass = load("sprites/tiles/grass.jpg")
     val dirt = load("sprites/tiles/dirt.jpg")
+    val stone = load("sprites/tiles/stone.jpg")
     val bg = load("map/cave-far-bg.jpg")
 }

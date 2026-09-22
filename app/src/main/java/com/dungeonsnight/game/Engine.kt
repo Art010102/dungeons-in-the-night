@@ -12,9 +12,13 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 const val PLAYER_MAX_HP = 10
+const val PLAYER_MAX_MANA = 1
 const val ENEMY_HP = 5
+const val DRAGON_HP = 10
 const val PLAYER_DMG = 1
 const val ENEMY_DMG = 2
+const val DRAGON_DMG = 3
+const val SPELL_DMG = 8
 const val WIN_XP = 100
 const val STEP = 1f / 60f
 const val ATTACK_TIME = 0.3f
@@ -23,6 +27,8 @@ private const val PW = 10f
 private const val PH = 14f
 private const val EW = 12f
 private const val EH = 10f
+private const val DW = 28f
+private const val DH = 35f
 private const val MOVE_SPEED = 110f
 private const val ACCEL_GND = 980f
 private const val ACCEL_AIR = 560f
@@ -48,6 +54,7 @@ data class InputState(
     var moveX: Float = 0f,
     var jumpHeld: Boolean = false,
     var attackHeld: Boolean = false,
+    var spellHeld: Boolean = false,
     var dropHeld: Boolean = false,
 )
 
@@ -56,6 +63,7 @@ class Player {
     var w = PW; var h = PH
     var facing = 1
     var hp = PLAYER_MAX_HP
+    var mana = PLAYER_MAX_MANA
     var grounded = true
     var anim = "idle"
     var animT = 0f
@@ -83,13 +91,36 @@ class Enemy {
     var grounded = true
 }
 
+class Pickup {
+    var kind = "coin"
+    var x = 0f; var y = 0f; var w = 10f; var h = 10f
+    var taken = false
+    var bobT = 0f
+}
+
+class Projectile {
+    var x = 0f; var y = 0f; var vx = 0f
+    var w = 10f; var h = 8f
+    var life = 1.4f
+    var hit = false
+}
+
+class Floater {
+    var text = ""
+    var x = 0f; var y = 0f; var t = 1f
+}
+
 sealed class GameEvent {
     object Jump : GameEvent()
     class Land(val x: Float, val y: Float) : GameEvent()
     object Swing : GameEvent()
+    object Spell : GameEvent()
     class Hit(val x: Float, val y: Float) : GameEvent()
     class Hurt(val x: Float, val y: Float) : GameEvent()
     class EnemyDie(val x: Float, val y: Float) : GameEvent()
+    class Heal(val x: Float, val y: Float) : GameEvent()
+    class Mana(val x: Float, val y: Float) : GameEvent()
+    class Coin(val x: Float, val y: Float) : GameEvent()
     object Win : GameEvent()
     object GameOver : GameEvent()
 }
@@ -107,6 +138,10 @@ class Engine(var levelId: Int = 1) {
     var level: LevelData = buildLevel(levelId)
     val player = Player()
     val enemies = mutableListOf<Enemy>()
+    val pickups = mutableListOf<Pickup>()
+    val projectiles = mutableListOf<Projectile>()
+    val floaters = mutableListOf<Floater>()
+    var coins = 0
     var phase = Phase.PLAY
     var paused = false
     var hitstop = 0f
@@ -115,6 +150,7 @@ class Engine(var levelId: Int = 1) {
     var dropT = 0f
     private var prevJump = false
     private var prevAttack = false
+    private var prevSpell = false
     private var acc = 0f
     private val events = mutableListOf<GameEvent>()
     private var nextId = 1
@@ -130,19 +166,32 @@ class Engine(var levelId: Int = 1) {
         nextId = 1
         player.x = level.spawnX; player.y = level.spawnY
         player.vx = 0f; player.vy = 0f
-        player.facing = 1; player.hp = PLAYER_MAX_HP
+        player.facing = 1; player.hp = PLAYER_MAX_HP; player.mana = PLAYER_MAX_MANA
         player.grounded = true; player.anim = "idle"; player.animT = 0f
         player.attackT = 0f; player.attackHit = false; player.invuln = 0f
         enemies.clear()
+        pickups.clear()
+        projectiles.clear()
+        floaters.clear()
+        coins = 0
         for (s in level.enemies) {
             val e = Enemy()
             e.id = nextId++
             e.kind = s.kind
             e.x = s.x; e.y = s.y
-            e.grounded = s.kind == "slime"
+            if (s.kind == "dragon") {
+                e.w = DW; e.h = DH; e.hp = DRAGON_HP
+            }
+            e.grounded = s.kind != "bat"
             e.animT = Random.nextFloat() * 0.4f
             e.bobT = Random.nextFloat() * Math.PI.toFloat() * 2f
             enemies.add(e)
+        }
+        for (s in level.pickups) {
+            val p = Pickup()
+            p.kind = s.kind; p.x = s.x; p.y = s.y
+            if (s.kind == "coin") { p.w = 10f; p.h = 10f } else { p.w = 12f; p.h = 14f }
+            pickups.add(p)
         }
         phase = Phase.PLAY
         paused = false
@@ -152,9 +201,10 @@ class Engine(var levelId: Int = 1) {
         dropT = 0f
         prevJump = false
         prevAttack = false
+        prevSpell = false
         acc = 0f
         events.clear()
-        input.moveX = 0f; input.jumpHeld = false; input.attackHeld = false; input.dropHeld = false
+        input.moveX = 0f; input.jumpHeld = false; input.attackHeld = false; input.spellHeld = false; input.dropHeld = false
     }
 
     fun togglePause() {
@@ -192,6 +242,7 @@ class Engine(var levelId: Int = 1) {
             p.animT = 0f
             emit(GameEvent.Swing)
         }
+        if (input.spellHeld && !prevSpell) castSpell()
         jumpBuffer = max(0f, jumpBuffer - dt)
         dropT = if (input.dropHeld) DROP_TIME else max(0f, dropT - dt)
         if (p.invuln > 0f) p.invuln -= dt
@@ -199,11 +250,15 @@ class Engine(var levelId: Int = 1) {
         stepPlayer(dt)
         stepSword()
         stepEnemies(dt)
+        stepProjectiles(dt)
+        stepPickups()
+        stepFloaters(dt)
         checkWin()
         checkFall()
         animatePlayer(dt)
         prevJump = input.jumpHeld
         prevAttack = input.attackHeld
+        prevSpell = input.spellHeld
     }
 
     private fun stepPlayer(dt: Float) {
@@ -394,18 +449,26 @@ class Engine(var levelId: Int = 1) {
             val dx = px - cx
             val dy = py - cy
             val dist = hypot(dx, dy)
-            if (dist < if (e.kind == "bat") 108f else 86f) e.aggro = true
+            val range = when (e.kind) {
+                "bat" -> 108f
+                "dragon" -> 160f
+                else -> 86f
+            }
+            if (dist < range) e.aggro = true
             if (e.attackT > 0f) {
                 e.attackT -= dt
                 e.anim = "attack"
-                val elapsed = 0.34f - e.attackT
+                val dur = if (e.kind == "dragon") 0.46f else 0.34f
+                val elapsed = dur - e.attackT
                 if (!e.attackHit && elapsed in 0.12f..0.22f) {
-                    if (aabb(e.x - 2f, e.y - 2f, e.w + 4f, e.h + 4f, p.x, p.y, p.w, p.h)) {
+                    val pad = if (e.kind == "dragon") 8f else 2f
+                    if (aabb(e.x - pad, e.y - pad, e.w + pad * 2f, e.h + pad * 2f, p.x, p.y, p.w, p.h)) {
                         e.attackHit = true
-                        hurtPlayer(if (dx == 0f) e.facing.toFloat() else sign(dx))
+                        val dmg = if (e.kind == "dragon") DRAGON_DMG else ENEMY_DMG
+                        hurtPlayer(if (dx == 0f) e.facing.toFloat() else sign(dx), dmg)
                     }
                 }
-                if (e.attackT <= 0f) e.anim = "idle"
+                if (e.attackT <= 0f) e.anim = if (abs(e.vx) > 8f) "run" else "idle"
             }
             if (e.kind == "bat") {
                 e.bobT += dt * 3.2f
@@ -429,7 +492,8 @@ class Engine(var levelId: Int = 1) {
                     e.facing = if (dir > 0) 1 else -1
                     val ahead = e.x + if (dir > 0) e.w + 2f else -2f
                     val floor = level.tileAt(floor(ahead / TILE).toInt(), floor((e.y + e.h + 1f) / TILE).toInt())
-                    e.vx = if (floor == T_SOLID || floor == T_ONEWAY) dir * 34f else 0f
+                    val spd = if (e.kind == "dragon") 52f else 34f
+                    e.vx = if (floor == T_SOLID || floor == T_ONEWAY) dir * spd else 0f
                 } else {
                     e.vx *= 1f - 6f * dt
                 }
@@ -438,22 +502,23 @@ class Engine(var levelId: Int = 1) {
                 moveActor(e, e.vx * dt, 0f, false)
                 moveActor(e, 0f, e.vy * dt, true, e.y + e.h)
             }
+            val reach = if (e.kind == "dragon") 14f else 6f
             if (e.attackT <= 0f && e.attackCd <= 0f && e.aggro &&
-                aabb(e.x - 6f, e.y - 6f, e.w + 12f, e.h + 12f, p.x, p.y, p.w, p.h)
+                aabb(e.x - reach, e.y - reach, e.w + reach * 2f, e.h + reach * 2f, p.x, p.y, p.w, p.h)
             ) {
-                e.attackT = 0.34f
+                e.attackT = if (e.kind == "dragon") 0.46f else 0.34f
                 e.attackHit = false
-                e.attackCd = 0.85f
+                e.attackCd = if (e.kind == "dragon") 1.05f else 0.85f
                 e.animT = 0f
                 e.anim = "attack"
             }
         }
     }
 
-    private fun hurtPlayer(fromDir: Float) {
+    private fun hurtPlayer(fromDir: Float, dmg: Int = ENEMY_DMG) {
         val p = player
         if (p.invuln > 0f || phase != Phase.PLAY) return
-        p.hp -= ENEMY_DMG
+        p.hp -= dmg
         p.invuln = INVULN
         p.vx = -fromDir * 52f
         p.vy = -48f
@@ -496,6 +561,89 @@ class Engine(var levelId: Int = 1) {
             else -> "idle"
         }
         if (p.anim != prev) p.animT = 0f else p.animT += dt
+    }
+
+    private fun castSpell() {
+        val p = player
+        if (p.mana < 1 || phase != Phase.PLAY) return
+        p.mana -= 1
+        val dir = p.facing
+        val b = Projectile()
+        b.x = if (dir > 0) p.x + p.w else p.x - 10f
+        b.y = p.y + 2f
+        b.vx = dir * 210f
+        projectiles.add(b)
+        emit(GameEvent.Spell)
+    }
+
+    private fun stepProjectiles(dt: Float) {
+        val keep = mutableListOf<Projectile>()
+        for (b in projectiles) {
+            if (b.hit) continue
+            b.life -= dt
+            if (b.life <= 0f) continue
+            b.x += b.vx * dt
+            if (solveSolidX(b.x, b.y, b.w, b.h, b.vx > 0f) { b.x = it }) {
+                emit(GameEvent.Hit(b.x + b.w / 2f, b.y + b.h / 2f))
+                continue
+            }
+            var hitEnemy = false
+            for (e in enemies) {
+                if (e.gone || e.dying) continue
+                if (!aabb(b.x, b.y, b.w, b.h, e.x, e.y, e.w, e.h)) continue
+                e.hp -= SPELL_DMG
+                e.vx += sign(b.vx) * 48f
+                if (e.kind != "bat") e.vy = -36f
+                hitstop = HITSTOP
+                emit(GameEvent.Hit(e.x + e.w / 2f, e.y + e.h / 2f))
+                if (e.hp <= 0) killEnemy(e)
+                hitEnemy = true
+                break
+            }
+            if (!hitEnemy) keep.add(b)
+        }
+        projectiles.clear()
+        projectiles.addAll(keep)
+    }
+
+    private fun stepPickups() {
+        val p = player
+        for (item in pickups) {
+            if (item.taken) continue
+            item.bobT += 0.08f
+            if (!aabb(p.x, p.y, p.w, p.h, item.x, item.y, item.w, item.h)) continue
+            item.taken = true
+            val cx = item.x + item.w / 2f
+            val cy = item.y
+            when (item.kind) {
+                "heal" -> {
+                    p.hp = PLAYER_MAX_HP
+                    floaters.add(Floater().also { it.text = "HP restored"; it.x = cx; it.y = cy; it.t = 1.2f })
+                    emit(GameEvent.Heal(cx, cy))
+                }
+                "mana" -> {
+                    p.mana = PLAYER_MAX_MANA
+                    floaters.add(Floater().also { it.text = "Mana restored"; it.x = cx; it.y = cy; it.t = 1.2f })
+                    emit(GameEvent.Mana(cx, cy))
+                }
+                else -> {
+                    coins += 1
+                    floaters.add(Floater().also { it.text = "+1"; it.x = cx; it.y = cy; it.t = 0.9f })
+                    emit(GameEvent.Coin(cx, cy))
+                }
+            }
+        }
+    }
+
+    private fun stepFloaters(dt: Float) {
+        val keep = mutableListOf<Floater>()
+        for (f in floaters) {
+            f.t -= dt
+            f.y -= 18f * dt
+            if (f.t > 0f) keep.add(f)
+        }
+        floaters.clear()
+        floaters.addAll(keep)
     }
 }
 

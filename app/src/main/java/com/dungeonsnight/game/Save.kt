@@ -17,6 +17,15 @@ class Save(ctx: Context) {
         get() = prefs.getFloat("volume", 0.8f).coerceIn(0f, 1f)
         set(v) { prefs.edit().putFloat("volume", v.coerceIn(0f, 1f)).apply() }
 
+    var coins: Int
+        get() = prefs.getInt("coins", 0)
+        set(v) { prefs.edit().putInt("coins", v).apply() }
+
+    fun addCoins(amount: Int): Int {
+        coins += amount
+        return coins
+    }
+
     fun addXp(amount: Int): Int {
         xp += amount
         return xp

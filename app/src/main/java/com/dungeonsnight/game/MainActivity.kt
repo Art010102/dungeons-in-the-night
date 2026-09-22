@@ -107,6 +107,7 @@ class MainActivity : AppCompatActivity(), GameView.Listener {
         hold(R.id.btnJumpDpad) { dpadJump = it; applyJump() }
         hold(R.id.btnDrop) { game.engine.input.dropHeld = it }
         hold(R.id.btnAttack) { game.engine.input.attackHeld = it }
+        hold(R.id.btnSpell) { game.engine.input.spellHeld = it }
 
         btnL1.setOnClickListener { startLevel(1) }
         btnL2.setOnClickListener { startLevel(2) }
@@ -211,7 +212,7 @@ class MainActivity : AppCompatActivity(), GameView.Listener {
         }
     }
 
-    override fun onHud(hp: Int, phase: Phase, paused: Boolean, levelName: String) {
+    override fun onHud(hp: Int, mana: Int, coins: Int, phase: Phase, paused: Boolean, levelName: String) {
         hudLevel.text = levelName
         for (i in 0 until hpRow.childCount) {
             val d = GradientDrawable()
@@ -219,6 +220,12 @@ class MainActivity : AppCompatActivity(), GameView.Listener {
             d.cornerRadius = 2f
             hpRow.getChildAt(i).background = d
         }
+        val manaCell = findViewById<View>(R.id.manaCell)
+        val md = GradientDrawable()
+        md.setColor(if (mana > 0) Color.parseColor("#C8C2B4") else Color.parseColor("#2A2118"))
+        md.cornerRadius = 2f
+        manaCell.background = md
+        findViewById<TextView>(R.id.hudCoins).text = "$coins/3"
     }
 
     override fun onWin() {
@@ -249,6 +256,13 @@ class MainActivity : AppCompatActivity(), GameView.Listener {
             GameEvent.Jump -> audio.jump()
             is GameEvent.Land -> audio.land()
             GameEvent.Swing -> audio.swing()
+            GameEvent.Spell -> audio.swing()
+            is GameEvent.Heal -> audio.win()
+            is GameEvent.Mana -> audio.win()
+            is GameEvent.Coin -> {
+                audio.hit()
+                save.addCoins(1)
+            }
             is GameEvent.Hit -> {
                 audio.hit()
                 game.trauma = minOf(1f, game.trauma + 0.35f)

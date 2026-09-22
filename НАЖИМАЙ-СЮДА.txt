@@ -3,3 +3,7 @@ Android Studio → Clone Repository
 https://github.com/Art010102/dungeons-in-the-night.git
 
 Потом зелёная кнопка Run.
+
+Иконка и баннер лежат в корне репо:
+  icon-512.png
+  banner-1024x500.png

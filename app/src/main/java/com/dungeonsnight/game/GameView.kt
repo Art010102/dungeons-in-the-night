@@ -333,7 +333,15 @@ class GameView @JvmOverloads constructor(
                     e.anim == "attack" -> min(3, floor(e.animT * 10f).toInt())
                     else -> (e.animT * 8).toInt() % 4
                 }
-                drawSheet(canvas, bmp, frame, e.x + e.w / 2f - 35f + lunge, e.y + e.h - 54f, 70f, 56f, e.facing < 0)
+                val dw = DRAGON_DRAW_W
+                val dh = DRAGON_DRAW_H
+                val lungeD = if (e.anim == "attack") e.facing * 8f else 0f
+                drawSheet(
+                    canvas, bmp, frame,
+                    e.x + e.w / 2f - dw / 2f + lungeD,
+                    e.y + e.h - dh + 2f,
+                    dw, dh, e.facing < 0,
+                )
             } else {
                 bmp = if (e.dying) a.batDeath else a.batIdle
                 frame = if (e.dying) min(3, floor(e.animT * 8f).toInt()) else (e.animT * 8).toInt() % 4
@@ -343,9 +351,9 @@ class GameView @JvmOverloads constructor(
             if (!e.dying) {
                 val maxHp = if (e.kind == "dragon") DRAGON_HP else ENEMY_HP
                 if (e.hp < maxHp) {
-                    val bar = if (e.kind == "dragon") 18f else 10f
+                    val bar = if (e.kind == "dragon") 45f else 10f
                     val hx = e.x + e.w / 2f - bar / 2f
-                    val hy = e.y - 4f
+                    val hy = if (e.kind == "dragon") e.y + e.h - DRAGON_DRAW_H - 6f else e.y - 4f
                     fill.color = Color.parseColor("#5A221C")
                     canvas.drawRect(hx, hy, hx + bar, hy + 1.5f, fill)
                     fill.color = Color.parseColor("#C45A48")

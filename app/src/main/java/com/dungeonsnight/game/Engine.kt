@@ -23,12 +23,14 @@ const val WIN_XP = 100
 const val STEP = 1f / 60f
 const val ATTACK_TIME = 0.3f
 
-private const val PW = 10f
-private const val PH = 14f
-private const val EW = 12f
-private const val EH = 10f
-private const val DW = 28f
-private const val DH = 35f
+const val PW = 10f
+const val PH = 14f
+const val EW = 12f
+const val EH = 10f
+const val DW = 70f
+const val DH = 88f
+const val DRAGON_DRAW_W = 175f
+const val DRAGON_DRAW_H = 140f
 private const val MOVE_SPEED = 110f
 private const val ACCEL_GND = 980f
 private const val ACCEL_AIR = 560f
@@ -451,7 +453,7 @@ class Engine(var levelId: Int = 1) {
             val dist = hypot(dx, dy)
             val range = when (e.kind) {
                 "bat" -> 108f
-                "dragon" -> 160f
+                "dragon" -> 240f
                 else -> 86f
             }
             if (dist < range) e.aggro = true
@@ -461,7 +463,7 @@ class Engine(var levelId: Int = 1) {
                 val dur = if (e.kind == "dragon") 0.46f else 0.34f
                 val elapsed = dur - e.attackT
                 if (!e.attackHit && elapsed in 0.12f..0.22f) {
-                    val pad = if (e.kind == "dragon") 8f else 2f
+                    val pad = if (e.kind == "dragon") 20f else 2f
                     if (aabb(e.x - pad, e.y - pad, e.w + pad * 2f, e.h + pad * 2f, p.x, p.y, p.w, p.h)) {
                         e.attackHit = true
                         val dmg = if (e.kind == "dragon") DRAGON_DMG else ENEMY_DMG
@@ -492,7 +494,7 @@ class Engine(var levelId: Int = 1) {
                     e.facing = if (dir > 0) 1 else -1
                     val ahead = e.x + if (dir > 0) e.w + 2f else -2f
                     val floor = level.tileAt(floor(ahead / TILE).toInt(), floor((e.y + e.h + 1f) / TILE).toInt())
-                    val spd = if (e.kind == "dragon") 52f else 34f
+                    val spd = if (e.kind == "dragon") 42f else 34f
                     e.vx = if (floor == T_SOLID || floor == T_ONEWAY) dir * spd else 0f
                 } else {
                     e.vx *= 1f - 6f * dt
@@ -502,7 +504,7 @@ class Engine(var levelId: Int = 1) {
                 moveActor(e, e.vx * dt, 0f, false)
                 moveActor(e, 0f, e.vy * dt, true, e.y + e.h)
             }
-            val reach = if (e.kind == "dragon") 14f else 6f
+            val reach = if (e.kind == "dragon") 35f else 6f
             if (e.attackT <= 0f && e.attackCd <= 0f && e.aggro &&
                 aabb(e.x - reach, e.y - reach, e.w + reach * 2f, e.h + reach * 2f, p.x, p.y, p.w, p.h)
             ) {

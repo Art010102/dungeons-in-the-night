@@ -17,9 +17,14 @@ RES = os.path.join(ROOT, "app", "src", "main", "res")
 W, H = 1920, 1080  # 16:9 phone, landscape — how the game actually runs
 TILE = 16
 T_EMPTY, T_SOLID, T_ONEWAY = 0, 1, 2
-VIEW_H = 148.0
+VIEW_H = 240.0
 SCALE = H / VIEW_H
 VIEW_W = W / SCALE
+DENSITY = 2.75  # ~xxhdpi on a 1080p phone in landscape
+
+
+def dp(n: float) -> int:
+    return int(round(n * DENSITY))
 
 FG = (239, 230, 216, 255)
 MUTED = (196, 184, 165, 255)
@@ -56,11 +61,6 @@ def sheet_cell(img: Image.Image, frame: int) -> Image.Image:
     cw, ch = img.width // cols, img.height // rows
     cc, rr = i % cols, i // cols
     cell = img.crop((cc * cw, rr * ch, cc * cw + cw, rr * ch + ch))
-    bbox = cell.getbbox()
-    if bbox:
-        pad = 6
-        x0, y0, x1, y1 = bbox
-        cell = cell.crop((max(0, x0 - pad), max(0, y0 - pad), min(cell.width, x1 + pad), min(cell.height, y1 + pad)))
     return cell
 
 
@@ -68,8 +68,8 @@ def blit_sheet(world: Image.Image, img: Image.Image, frame: int, x: float, y: fl
     cell = sheet_cell(img, frame)
     if flip:
         cell = cell.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
-    piece = cell.resize((max(1, int(dw)), max(1, int(dh))), Image.Resampling.LANCZOS)
-    px, py = int(x), int(y)
+    piece = cell.resize((max(1, int(dw)), max(1, int(dh))), Image.Resampling.NEAREST)
+    px, py = int(round(x)), int(round(y))
     if px < 0 or py < 0:
         return
     world.alpha_composite(piece, (px, py))
@@ -290,7 +290,7 @@ def render_world(a: A, lv: Level, px: float, py: float, extras: dict) -> Image.I
     for kind, c, floor in lv.pickups:
         ix, iy = c * TILE + 4, floor * TILE - 12
         if kind == "coin":
-            blit_sheet(world, a.coin, 1, wx(ix - 4), wy(iy - 4), 18, 18, False)
+            blit_sheet(world, a.coin, 1, wx(ix - 2), wy(iy - 2), 14, 14, False)
         else:
             img = a.heal if kind == "heal" else a.mana
             piece = img.resize((14, 16), Image.Resampling.NEAREST)
@@ -302,14 +302,14 @@ def render_world(a: A, lv: Level, px: float, py: float, extras: dict) -> Image.I
     for kind, c, floor in lv.enemies:
         if kind == "slime":
             ex, ey = c * TILE, floor * TILE - 10
-            blit_sheet(world, a.slime, extras.get("slime_frame", 1), wx(ex + 6 - 18), wy(ey + 10 - 28), 36, 28, True)
+            blit_sheet(world, a.slime, extras.get("slime_frame", 1), wx(ex + 6 - 11), wy(ey + 10 - 18), 22, 18, True)
         elif kind == "bat":
             ex, ey = c * TILE, floor * TILE
-            blit_sheet(world, a.bat, 2, wx(ex + 6 - 18), wy(ey + 5 - 16), 36, 28, True)
+            blit_sheet(world, a.bat, 2, wx(ex + 6 - 11), wy(ey + 5 - 9), 22, 18, True)
         elif kind == "dragon":
             ex, ey = c * TILE - 20, floor * TILE - 88
             bmp = a.dragon_attack if extras.get("dragon_attack") else a.dragon_idle
-            blit_sheet(world, bmp, extras.get("dragon_frame", 1), wx(ex + 35 - 80), wy(ey + 88 - 128), 160, 128, True)
+            blit_sheet(world, bmp, extras.get("dragon_frame", 1), wx(ex + 35 - 87.5), wy(ey + 88 - 140), 175, 140, True)
             if extras.get("dragon_hp") is not None:
                 bar, hp, maxhp = 45, extras["dragon_hp"], 10
                 hx, hy = wx(ex + 35 - bar / 2), wy(ey + 88 - 140 - 6)
@@ -319,12 +319,12 @@ def render_world(a: A, lv: Level, px: float, py: float, extras: dict) -> Image.I
     anim = extras.get("player_anim", "idle")
     fr = extras.get("player_frame", 1)
     bmp = {"idle": a.knight_idle, "run": a.knight_run, "jump": a.knight_jump, "attack": a.knight_attack}[anim]
-    blit_sheet(world, bmp, fr, wx(px + 5 - 22), wy(py + 14 - 44), 44, 46, extras.get("flip", False))
+    blit_sheet(world, bmp, fr, wx(px + 5 - 14), wy(py + 14 - 26), 28, 28, extras.get("flip", False))
     if extras.get("slash"):
-        blit_sheet(world, a.slash, 2, wx(px + 12), wy(py - 8), 36, 30, False)
+        blit_sheet(world, a.slash, 2, wx(px + 10 - 2), wy(py), 22, 18, False)
     if extras.get("fireball"):
         bx, by = extras["fireball"]
-        blit_sheet(world, a.fireball, 1, wx(bx), wy(by), 32, 28, False)
+        blit_sheet(world, a.fireball, 1, wx(bx), wy(by), 18, 16, False)
     if extras.get("floater"):
         d = ImageDraw.Draw(world)
         d.text((wx(extras["floater"][0]), wy(extras["floater"][1])), extras["floater"][2], font=font(10, True), fill=CARVED_GOLD)
@@ -343,42 +343,81 @@ def render_world(a: A, lv: Level, px: float, py: float, extras: dict) -> Image.I
     return screen
 
 
-def oval(draw, box, fill, outline, width=3):
-    draw.ellipse(box, fill=fill, outline=outline, width=width)
+def circle(img: Image.Image, cx: int, cy: int, r: int, fill, outline, stroke: int) -> None:
+    overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(overlay)
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=fill, outline=outline, width=stroke)
+    img.alpha_composite(overlay)
+
+
+def tri(d, kind: str, cx: int, cy: int, s: int) -> None:
+    c = (239, 230, 216, 255)
+    if kind == "left":
+        d.polygon([(cx - s, cy), (cx + int(s * 0.55), cy - s), (cx + int(s * 0.55), cy + s)], fill=c)
+    elif kind == "right":
+        d.polygon([(cx + s, cy), (cx - int(s * 0.55), cy - s), (cx - int(s * 0.55), cy + s)], fill=c)
+    elif kind == "up":
+        d.polygon([(cx, cy - s), (cx + s, cy + int(s * 0.55)), (cx - s, cy + int(s * 0.55))], fill=c)
+    else:
+        d.polygon([(cx, cy + s), (cx - s, cy - int(s * 0.55)), (cx + s, cy - int(s * 0.55))], fill=c)
 
 
 def draw_controls(img: Image.Image) -> None:
+    """Real overlay from activity_main.xml: triangle arrows, sword, flame."""
+    m = dp(16)
+    pad = dp(168)
+    btn = dp(52)
+    plate_x, plate_y = m, H - m - pad
+    circle(img, plate_x + pad // 2, plate_y + pad // 2, pad // 2, (239, 230, 216, 13), (239, 230, 216, 34), max(2, dp(1)))
+    cx, cy = plate_x + pad // 2, plate_y + pad // 2
+    inset = dp(8) + btn // 2
+    positions = {
+        "up": (cx, plate_y + inset),
+        "left": (plate_x + inset, cy),
+        "right": (plate_x + pad - inset, cy),
+        "down": (cx, plate_y + pad - inset),
+    }
     d = ImageDraw.Draw(img)
-    # left pad
-    oval(d, [48, H - 48 - 336, 48 + 336, H - 48], (239, 230, 216, 14), (239, 230, 216, 34), 2)
-    cx, cy, r = 48 + 168, H - 48 - 168, 52
-    for dx, dy in ((0, -70), (-70, 0), (70, 0), (0, 70)):
-        oval(d, [cx + dx - r, cy + dy - r, cx + dx + r, cy + dy + r], (239, 230, 216, 28), (239, 230, 216, 70), 3)
-    f = font(28, True)
-    for ch, dx, dy in (("▲", 0, -70), ("◀", -70, 0), ("▶", 70, 0), ("▼", 0, 70)):
-        d.text((cx + dx, cy + dy), ch, font=f, fill=FG, anchor="mm")
-    # right actions
-    ax, ay = W - 280, H - 160
-    oval(d, [ax - 72, ay - 72, ax + 72, ay + 72], (239, 230, 216, 36), (239, 230, 216, 90), 3)
-    d.text((ax, ay), "⚔", font=font(42, True), fill=FG, anchor="mm")
-    oval(d, [ax + 90, ay - 140, ax + 90 + 120, ay - 20], (239, 230, 216, 32), (239, 230, 216, 80), 3)
-    d.text((ax + 150, ay - 80), "▲", font=font(32, True), fill=FG, anchor="mm")
-    oval(d, [ax - 150, ay - 100, ax - 54, ay - 4], (239, 230, 216, 28), (239, 230, 216, 70), 3)
-    d.text((ax - 102, ay - 52), "✦", font=font(26, True), fill=GOLD, anchor="mm")
+    for kind, (x, y) in positions.items():
+        circle(img, x, y, btn // 2, (239, 230, 216, 26), (239, 230, 216, 51), max(2, dp(2)))
+        tri(d, kind, x, y, dp(9))
+    me, mb = dp(20), dp(20)
+    jump_s, atk_s, spl_s = dp(60), dp(72), dp(48)
+    jump_cx = W - me - jump_s // 2
+    jump_cy = H - mb - dp(28) - jump_s // 2
+    atk_cx = jump_cx - dp(10) - jump_s // 2 - atk_s // 2
+    atk_cy = H - mb - atk_s // 2
+    spl_cx = atk_cx - dp(8) - atk_s // 2 - spl_s // 2
+    spl_cy = H - mb - dp(36) - spl_s // 2
+    circle(img, spl_cx, spl_cy, spl_s // 2, (239, 230, 216, 34), (239, 230, 216, 68), max(2, dp(2)))
+    w = max(3, dp(2))
+    d.arc([spl_cx - dp(10), spl_cy - dp(4), spl_cx + dp(4), spl_cy + dp(12)], start=200, end=20, fill=FG, width=w)
+    d.arc([spl_cx - dp(2), spl_cy - dp(12), spl_cx + dp(12), spl_cy + dp(8)], start=240, end=80, fill=FG, width=w)
+    circle(img, atk_cx, atk_cy, atk_s // 2, (239, 230, 216, 34), (239, 230, 216, 68), max(2, dp(2)))
+    s = dp(13)
+    d.line([(atk_cx - s, atk_cy + s), (atk_cx + s, atk_cy - s)], fill=FG, width=max(3, dp(2)))
+    d.line([(atk_cx + int(s * 0.2), atk_cy - s), (atk_cx + s, atk_cy - s), (atk_cx + s, atk_cy - int(s * 0.2))], fill=FG, width=max(3, dp(2)))
+    d.line([(atk_cx - s, atk_cy + int(s * 0.2)), (atk_cx - s, atk_cy + s), (atk_cx - int(s * 0.2), atk_cy + s)], fill=FG, width=max(3, dp(2)))
+    circle(img, jump_cx, jump_cy, jump_s // 2, (239, 230, 216, 34), (239, 230, 216, 68), max(2, dp(2)))
+    tri(d, "up", jump_cx, jump_cy, dp(11))
 
 
 def draw_hud(img: Image.Image, name: str, hp: int = 10, mana: bool = True, coins: str = "1/3") -> None:
     d = ImageDraw.Draw(img)
-    d.text((48, 36), name.upper(), font=font(22, True), fill=(138, 122, 104, 255))
-    x = 48
+    m = dp(16)
+    d.text((m, m), name.upper(), font=font(dp(11), True), fill=(138, 122, 104, 255))
+    x = m
+    y = m + dp(18)
     for i in range(10):
         col = HP if i < hp else HP_EMPTY
-        d.rectangle([x, 72, x + 28, 86], fill=col)
-        x += 32
-    d.rectangle([48, 100, 48 + 56, 116], fill=(90, 140, 200, 220) if mana else HP_EMPTY)
-    d.text((118, 100), coins, font=font(22, True), fill=MUTED)
-    d.rectangle([W - 120, 36, W - 48, 108], outline=FG, width=2)
-    d.text((W - 84, 72), "II", font=font(28, True), fill=FG, anchor="mm")
+        d.rectangle([x, y, x + dp(14), y + dp(8)], fill=col)
+        x += dp(16)
+    y2 = y + dp(14)
+    d.rectangle([m, y2, m + dp(28), y2 + dp(8)], fill=(90, 140, 200, 220) if mana else HP_EMPTY)
+    d.text((m + dp(34), y2 - dp(2)), coins, font=font(dp(12), True), fill=MUTED)
+    ps = dp(44)
+    d.rectangle([W - m - ps, m, W - m, m + ps], outline=(239, 230, 216, 80), width=max(2, dp(1)))
+    d.text((W - m - ps // 2, m + ps // 2), "II", font=font(dp(14), True), fill=FG, anchor="mm")
 
 
 def cover_menu(a: A) -> Image.Image:

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#FF120E0C</color>
+    <color name="surface">#E61C1612</color>
+    <color name="surface_solid">#FF1C1612</color>
+    <color name="fg">#FFEFE6D8</color>
+    <color name="muted">#FFC4B8A5</color>
+    <color name="subtle">#FF8A7A68</color>
+    <color name="gold">#FFD4A574</color>
+    <color name="accent_fg">#FF120E0C</color>
+    <color name="border">#24EFE6D8</color>
+    <color name="hp">#FFC45A48</color>
+    <color name="hp_empty">#FF2A2118</color>
+</resources>

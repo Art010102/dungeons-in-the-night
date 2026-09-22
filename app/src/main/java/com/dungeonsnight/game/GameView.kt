@@ -1,0 +1,369 @@
+package com.dungeonsnight.game
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.RectF
+import android.util.AttributeSet
+import android.view.SurfaceHolder
+import android.view.SurfaceView
+import kotlin.math.floor
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
+import kotlin.math.sin
+
+class GameView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+) : SurfaceView(context, attrs), SurfaceHolder.Callback, Runnable {
+
+    val engine = Engine(1)
+    var running = false
+    private var thread: Thread? = null
+    private var assets: Assets? = null
+    var listener: Listener? = null
+
+    var camX = 0f
+    var camY = 0f
+    private var camReady = false
+    var trauma = 0f
+    private var lastHp = -1
+    private var lastPhase: Phase? = null
+    private var lastPaused = false
+    private val pix = Paint(Paint.ANTI_ALIAS_FLAG).apply { isFilterBitmap = false }
+    private val fill = Paint()
+    private val src = Rect()
+    private val dst = RectF()
+
+    interface Listener {
+        fun onHud(hp: Int, phase: Phase, paused: Boolean, levelName: String)
+        fun onWin()
+        fun onDead()
+        fun onEvent(ev: GameEvent)
+    }
+
+    init {
+        holder.addCallback(this)
+        isFocusable = true
+        setZOrderOnTop(false)
+    }
+
+    fun loadAssets() {
+        if (assets == null) assets = Assets(context)
+    }
+
+    fun startLevel(id: Int) {
+        engine.reset(id)
+        camReady = false
+        trauma = 0f
+    }
+
+    fun resetCamera() { camReady = false }
+
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        loadAssets()
+        running = true
+        thread = Thread(this, "dungeons-loop").also { it.start() }
+    }
+
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+        running = false
+        try { thread?.join(400) } catch (_: InterruptedException) {}
+        thread = null
+    }
+
+    override fun run() {
+        var last = System.nanoTime()
+        while (running) {
+            val now = System.nanoTime()
+            val dt = min(0.1f, (now - last) / 1_000_000_000f)
+            last = now
+            engine.step(dt)
+            val events = engine.drainEvents()
+            for (ev in events) {
+                post { listener?.onEvent(ev) }
+                if (ev is GameEvent.Win) post { listener?.onWin() }
+                if (ev is GameEvent.GameOver) post { listener?.onDead() }
+            }
+            trauma = max(0f, trauma - dt * 1.8f)
+            val hp = engine.player.hp
+            val phase = engine.phase
+            val paused = engine.paused
+            val name = engine.level.name
+            if (hp != lastHp || phase != lastPhase || paused != lastPaused) {
+                lastHp = hp; lastPhase = phase; lastPaused = paused
+                post { listener?.onHud(hp, phase, paused, name) }
+            }
+            val canvas = try { holder.lockCanvas() } catch (_: Exception) { null }
+            if (canvas != null) {
+                try { drawWorld(canvas, dt) } finally { holder.unlockCanvasAndPost(canvas) }
+            } else {
+                try { Thread.sleep(8) } catch (_: InterruptedException) {}
+            }
+        }
+    }
+
+    private fun drawWorld(canvas: Canvas, dt: Float) {
+        val a = assets ?: return
+        val w = canvas.width.toFloat()
+        val h = canvas.height.toFloat()
+        canvas.drawColor(Color.parseColor("#120E0C"))
+        val viewH = 240f
+        val scale = h / viewH
+        var viewW = w / scale
+        if (viewW < 300f) {
+            val s = w / 300f
+            viewW = 300f
+            val viewH2 = h / s
+            drawScaled(canvas, a, dt, w, h, viewW, viewH2, s)
+            return
+        }
+        drawScaled(canvas, a, dt, w, h, viewW, viewH, scale)
+    }
+
+    private fun drawScaled(
+        canvas: Canvas, a: Assets, dt: Float,
+        screenW: Float, screenH: Float, viewW: Float, viewH: Float, scale: Float,
+    ) {
+        val p = engine.player
+        val look = p.facing * 36f + p.vx * 0.18f
+        val tx = (p.x + p.w / 2f - viewW * 0.42f + look).coerceIn(0f, max(0f, engine.worldW - viewW))
+        val ty = (p.y + p.h / 2f - viewH * 0.58f).coerceIn(0f, max(0f, engine.worldH - viewH))
+        if (!camReady) {
+            camX = tx; camY = ty; camReady = true
+        } else {
+            camX = lerpCam(camX, tx, dt)
+            camY = lerpCam(camY, ty, dt)
+        }
+        val shake = trauma * trauma
+        val sx = if (shake > 0f) (Math.random().toFloat() * 2f - 1f) * 5f * shake else 0f
+        val sy = if (shake > 0f) (Math.random().toFloat() * 2f - 1f) * 4f * shake else 0f
+
+        canvas.save()
+        canvas.scale(scale, scale)
+        canvas.translate(-camX + sx, -camY + sy)
+
+        drawBackdrop(canvas, a, viewW, viewH)
+        drawTiles(canvas, a, viewW, viewH)
+        drawTorches(canvas)
+        drawFlag(canvas, a)
+        drawEnemies(canvas, a)
+        drawPlayer(canvas, a)
+        drawSlash(canvas, a)
+        canvas.restore()
+        // vignette
+        fill.shader = android.graphics.RadialGradient(
+            screenW / 2f, screenH * 0.55f, screenW * 0.72f,
+            intArrayOf(Color.TRANSPARENT, Color.parseColor("#80080605")),
+            floatArrayOf(0.35f, 1f),
+            android.graphics.Shader.TileMode.CLAMP,
+        )
+        canvas.drawRect(0f, 0f, screenW, screenH, fill)
+        fill.shader = null
+    }
+
+    private fun drawBackdrop(canvas: Canvas, a: Assets, viewW: Float, viewH: Float) {
+        val img = a.bg
+        val destH = 288f
+        val destW = destH * img.width / img.height
+        val px = camX * 0.18f
+        var x = camX - (((px % destW) + destW) % destW)
+        while (x < camX + viewW + 4f) {
+            dst.set(x, camY - 12f, x + destW, camY - 12f + destH)
+            canvas.drawBitmap(img, null, dst, pix)
+            x += destW - 1f
+        }
+        fill.color = Color.argb(0x47, 0x12, 0x0C, 0x06)
+        canvas.drawRect(camX - 4f, camY - 4f, camX + viewW + 4f, camY + viewH + 4f, fill)
+    }
+
+    private fun sample(canvas: Canvas, bmp: Bitmap, c: Int, r: Int, x: Float, y: Float) {
+        val tw = max(1, bmp.width - TILE.toInt())
+        val th = max(1, bmp.height - TILE.toInt())
+        val sx = (c * TILE.toInt()) % tw
+        val sy = (r * TILE.toInt()) % th
+        src.set(sx, sy, sx + TILE.toInt(), sy + TILE.toInt())
+        dst.set(x, y, x + TILE, y + TILE)
+        canvas.drawBitmap(bmp, src, dst, pix)
+    }
+
+    private fun drawTiles(canvas: Canvas, a: Assets, viewW: Float, viewH: Float) {
+        val lv = engine.level
+        val c0 = max(0, floor(camX / TILE).toInt() - 1)
+        val c1 = min(lv.cols - 1, floor((camX + viewW) / TILE).toInt() + 1)
+        val r0 = max(0, floor(camY / TILE).toInt() - 1)
+        val r1 = min(lv.rows - 1, floor((camY + viewH) / TILE).toInt() + 1)
+        for (r in r0..r1) for (c in c0..c1) {
+            val t = lv.tileAt(c, r)
+            val x = c * TILE
+            val y = r * TILE
+            if (t == T_SOLID) {
+                val shell = r < 2 || c < 2 || c >= lv.cols - 2
+                val above = lv.tileAt(c, r - 1)
+                when {
+                    shell -> sample(canvas, a.rock, c, r, x, y)
+                    above != T_SOLID -> {
+                        sample(canvas, a.grass, c, r, x, y)
+                        fill.color = Color.argb(0x47, 0x28, 0x46, 0x1C)
+                        canvas.drawRect(x, y, x + TILE, y + 3f, fill)
+                    }
+                    else -> sample(canvas, a.dirt, c, r, x, y)
+                }
+            } else if (t == T_ONEWAY) {
+                fill.color = Color.parseColor("#FF5C4634")
+                canvas.drawRect(x, y, x + TILE, y + 4f, fill)
+                fill.color = Color.parseColor("#FF8A6A4A")
+                canvas.drawRect(x, y, x + TILE, y + 2f, fill)
+                fill.color = Color.argb(0x8C, 0x46, 0x6E, 0x30)
+                canvas.drawRect(x, y - 1f, x + TILE, y + 1f, fill)
+            }
+        }
+    }
+
+    private fun drawTorches(canvas: Canvas) {
+        val now = System.currentTimeMillis() / 1000.0
+        for (t in engine.level.torches) {
+            val flicker = 0.72 + sin(now * 5 + t.x) * 0.08 + sin(now * 8 + t.y) * 0.06
+            fill.shader = android.graphics.RadialGradient(
+                t.x, t.y, 46f,
+                intArrayOf(
+                    Color.argb((55 * flicker).roundToInt().coerceIn(0, 255), 232, 170, 90),
+                    Color.TRANSPARENT,
+                ),
+                floatArrayOf(0f, 1f),
+                android.graphics.Shader.TileMode.CLAMP,
+            )
+            canvas.drawCircle(t.x, t.y, 46f, fill)
+            fill.shader = null
+            fill.color = Color.argb((210 * flicker).roundToInt().coerceIn(0, 80), 255, 210, 130)
+            canvas.drawRect(t.x - 1f, t.y - 3f, t.x + 1f, t.y + 2f, fill)
+        }
+    }
+
+    private fun drawSheet(canvas: Canvas, bmp: Bitmap, frame: Int, dx: Float, dy: Float, dw: Float, dh: Float, flip: Boolean) {
+        val cols = 2
+        val rows = 2
+        val i = ((frame % 4) + 4) % 4
+        val cw = bmp.width / cols
+        val ch = bmp.height / rows
+        val cc = i % cols
+        val rr = i / cols
+        src.set(cc * cw, rr * ch, cc * cw + cw, rr * ch + ch)
+        canvas.save()
+        if (flip) {
+            canvas.translate(dx + dw / 2f, dy + dh / 2f)
+            canvas.scale(-1f, 1f)
+            canvas.translate(-dw / 2f, -dh / 2f)
+            dst.set(0f, 0f, dw, dh)
+            canvas.drawBitmap(bmp, src, dst, pix)
+        } else {
+            dst.set(dx, dy, dx + dw, dy + dh)
+            canvas.drawBitmap(bmp, src, dst, pix)
+        }
+        canvas.restore()
+    }
+
+    private fun drawFlag(canvas: Canvas, a: Assets) {
+        val f = engine.level
+        val frame = ((System.currentTimeMillis() / 180) % 4).toInt()
+        drawSheet(canvas, a.flag, frame, f.flagX - 6f, f.flagY - 4f, 28f, 32f, false)
+    }
+
+    private fun drawPlayer(canvas: Canvas, a: Assets) {
+        val p = engine.player
+        if (p.invuln > 0f && (p.invuln * 16).toInt() % 2 == 0) pix.alpha = 115 else pix.alpha = 255
+        val (bmp, frame) = playerFrame(p, a)
+        drawSheet(canvas, bmp, frame, p.x + p.w / 2f - 14f, p.y + p.h - 26f, 28f, 28f, p.facing < 0)
+        pix.alpha = 255
+    }
+
+    private fun playerFrame(p: Player, a: Assets): Pair<Bitmap, Int> {
+        if (p.anim == "attack") {
+            val t = 1f - p.attackT / ATTACK_TIME
+            return a.knightAttack to min(3, floor(t * 4f).toInt())
+        }
+        if (p.anim == "jump") {
+            val f = when {
+                p.vy < -60f -> 0
+                p.vy < -10f -> 1
+                p.vy < 40f -> 2
+                else -> 3
+            }
+            return a.knightJump to f
+        }
+        if (p.anim == "run") return a.knightRun to ((p.animT * 10).toInt() % 4)
+        return a.knightIdle to ((p.animT * 6).toInt() % 4)
+    }
+
+    private fun drawEnemies(canvas: Canvas, a: Assets) {
+        for (e in engine.enemies) {
+            if (e.gone) continue
+            val fade = if (e.dying) max(0f, 1f - e.animT / 0.55f) else 1f
+            pix.alpha = (255 * fade).toInt()
+            val lunge = if (e.anim == "attack") e.facing * 3f else 0f
+            val bmp: Bitmap
+            val frame: Int
+            if (e.kind == "slime") {
+                bmp = if (e.dying) a.slimeDeath else a.slimeIdle
+                frame = if (e.dying) min(3, floor(e.animT * 8f).toInt()) else (e.animT * 6).toInt() % 4
+                val squash = if (e.anim == "attack") 0.82f else 1f
+                val dh = 18f * squash
+                drawSheet(canvas, bmp, frame, e.x + e.w / 2f - 11f + lunge, e.y + e.h - dh + 1f, 22f, dh, e.facing < 0)
+            } else {
+                bmp = if (e.dying) a.batDeath else a.batIdle
+                frame = if (e.dying) min(3, floor(e.animT * 8f).toInt()) else (e.animT * 8).toInt() % 4
+                drawSheet(canvas, bmp, frame, e.x + e.w / 2f - 11f + lunge, e.y + e.h / 2f - 9f, 22f, 18f, e.facing < 0)
+            }
+            pix.alpha = 255
+            if (!e.dying && e.hp < ENEMY_HP) {
+                val hx = e.x + e.w / 2f - 5f
+                val hy = e.y - 3f
+                fill.color = Color.parseColor("#5A221C")
+                canvas.drawRect(hx, hy, hx + 10f, hy + 1.5f, fill)
+                fill.color = Color.parseColor("#C45A48")
+                canvas.drawRect(hx, hy, hx + 10f * e.hp / ENEMY_HP, hy + 1.5f, fill)
+            }
+        }
+    }
+
+    private fun drawSlash(canvas: Canvas, a: Assets) {
+        val p = engine.player
+        if (p.attackT <= 0f) return
+        val t = 1f - p.attackT / ATTACK_TIME
+        val frame = min(3, floor(t * 4f).toInt())
+        val dx = if (p.facing > 0) p.x + p.w - 2f else p.x - 20f
+        pix.alpha = 230
+        drawSheet(canvas, a.slash, frame, dx, p.y, 22f, 18f, p.facing < 0)
+        pix.alpha = 255
+    }
+}
+
+class Assets(ctx: Context) {
+    private fun load(path: String): Bitmap {
+        ctx.assets.open(path).use {
+            return BitmapFactory.decodeStream(it)
+                ?: throw IllegalStateException("missing $path")
+        }
+    }
+    val knightIdle = load("sprites/knight/idle.png")
+    val knightRun = load("sprites/knight/run.png")
+    val knightJump = load("sprites/knight/jump.png")
+    val knightAttack = load("sprites/knight/attack.png")
+    val slimeIdle = load("sprites/slime/idle.png")
+    val slimeDeath = load("sprites/slime/death.png")
+    val batIdle = load("sprites/bat/idle.png")
+    val batDeath = load("sprites/bat/death.png")
+    val flag = load("sprites/flag/idle.png")
+    val slash = load("sprites/fx/slash.png")
+    val rock = load("sprites/tiles/rock.jpg")
+    val grass = load("sprites/tiles/grass.jpg")
+    val dirt = load("sprites/tiles/dirt.jpg")
+    val bg = load("map/cave-far-bg.jpg")
+}

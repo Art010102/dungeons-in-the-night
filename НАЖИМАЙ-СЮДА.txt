@@ -1,0 +1,5 @@
+Android Studio → Clone Repository
+
+https://github.com/Art010102/dungeons-in-the-night.git
+
+Потом зелёная кнопка Run.

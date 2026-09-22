@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Dungeons in the Night</string>
+    <string name="eyebrow">A torchlit descent</string>
+    <string name="title_line1">Dungeons</string>
+    <string name="title_line2">in the Night</string>
+    <string name="blurb">Three halls. Slimes, bats, a red banner at the far end. The next door opens only after the last.</string>
+    <string name="start_game">Start Game</string>
+    <string name="select_level">Select Level</string>
+    <string name="settings">Settings</string>
+    <string name="exit">Exit</string>
+    <string name="volume">Volume</string>
+    <string name="back">Back</string>
+    <string name="paused">Paused</string>
+    <string name="resume">Resume</string>
+    <string name="game_over">Game Over</string>
+    <string name="torch_out">The torch goes out</string>
+    <string name="restart">Restart</string>
+    <string name="you_win">You Win</string>
+    <string name="banner_yours">The banner is yours</string>
+    <string name="next_yes">Yes — next level</string>
+    <string name="next_no">No — menu</string>
+    <string name="night_yours">The night is yours. All three halls are quiet.</string>
+    <string name="level_open">Open</string>
+    <string name="level_locked">Locked</string>
+    <string name="level_1">1. Ember Halls</string>
+    <string name="level_2">2. Forked Dark</string>
+    <string name="level_3">3. Night\'s Crown</string>
+    <string name="jump">Jump</string>
+    <string name="attack">Attack</string>
+    <string name="drop">Drop</string>
+    <string name="left">Left</string>
+    <string name="right">Right</string>
+    <string name="pause">Pause</string>
+</resources>

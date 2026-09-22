@@ -21,6 +21,10 @@ class Save(ctx: Context) {
         get() = prefs.getInt("coins", 0)
         set(v) { prefs.edit().putInt("coins", v).apply() }
 
+    var lang: String
+        get() = I18n.parse(prefs.getString("lang", "en"))
+        set(v) { prefs.edit().putString("lang", I18n.parse(v)).apply() }
+
     fun addCoins(amount: Int): Int {
         coins += amount
         return coins

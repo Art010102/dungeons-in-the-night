@@ -5,9 +5,12 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.SeekBar
+import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
@@ -37,6 +40,8 @@ class MainActivity : AppCompatActivity(), GameView.Listener {
     private lateinit var btnL1: Button
     private lateinit var btnL2: Button
     private lateinit var btnL3: Button
+    private lateinit var languageSpinner: Spinner
+    private var applyingLang = false
     private var dpadJump = false
     private var faceJump = false
 
@@ -48,6 +53,7 @@ class MainActivity : AppCompatActivity(), GameView.Listener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         save = Save(this)
+        I18n.set(save.lang)
         audio = AudioHub(this)
         audio.setVolume(save.volume)
 
@@ -77,7 +83,6 @@ class MainActivity : AppCompatActivity(), GameView.Listener {
         findViewById<Button>(R.id.btnStart).setOnClickListener { startLevel(1) }
         findViewById<Button>(R.id.btnLevels).setOnClickListener { showLevels() }
         findViewById<Button>(R.id.btnSettings).setOnClickListener { showSettings() }
-        findViewById<Button>(R.id.btnExit).setOnClickListener { finish() }
         findViewById<Button>(R.id.btnLevelsBack).setOnClickListener { showMenu() }
         findViewById<Button>(R.id.btnSettingsBack).setOnClickListener { showMenu() }
         findViewById<Button>(R.id.btnResume).setOnClickListener {
@@ -126,6 +131,24 @@ class MainActivity : AppCompatActivity(), GameView.Listener {
             override fun onStopTrackingTouch(sb: SeekBar?) {}
         })
 
+        languageSpinner = findViewById(R.id.languageSpinner)
+        val adapter = ArrayAdapter(this, R.layout.spinner_item, I18n.nativeNames)
+        adapter.setDropDownViewResource(R.layout.spinner_dropdown)
+        languageSpinner.adapter = adapter
+        languageSpinner.setSelection(I18n.indexOf(save.lang), false)
+        languageSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (applyingLang) return
+                val code = I18n.codes.getOrElse(position) { "en" }
+                if (code == I18n.lang) return
+                I18n.set(code)
+                save.lang = code
+                applyLang()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        applyLang()
         showMenu()
         buildHp(PLAYER_MAX_HP)
     }
@@ -149,7 +172,7 @@ class MainActivity : AppCompatActivity(), GameView.Listener {
         hud.visibility = View.VISIBLE
         touch.visibility = View.VISIBLE
         btnPause.visibility = View.VISIBLE
-        hudLevel.text = game.engine.level.name
+        hudLevel.text = I18n.levelTitle(id)
     }
 
     private fun toMenuFromPlay() {
@@ -167,6 +190,40 @@ class MainActivity : AppCompatActivity(), GameView.Listener {
         menu.visibility = View.VISIBLE
         xpLabel.text = "XP  ${save.xp}"
         audio.stopMusic()
+    }
+
+    private fun applyLang() {
+        applyingLang = true
+        findViewById<TextView>(R.id.menuEyebrow).text = I18n.t("eyebrow")
+        findViewById<TextView>(R.id.menuTitle1).text = I18n.t("title1")
+        findViewById<TextView>(R.id.menuTitle2).text = I18n.t("title2")
+        findViewById<TextView>(R.id.menuBlurb).text = I18n.t("blurb")
+        findViewById<Button>(R.id.btnStart).text = I18n.t("start")
+        findViewById<Button>(R.id.btnLevels).text = I18n.t("selectLevel")
+        findViewById<Button>(R.id.btnSettings).text = I18n.t("settings")
+        findViewById<TextView>(R.id.levelsTitle).text = I18n.t("selectLevel")
+        btnL1.text = "1. ${I18n.levelTitle(1)}"
+        btnL2.text = "2. ${I18n.levelTitle(2)}"
+        btnL3.text = "3. ${I18n.levelTitle(3)}"
+        findViewById<Button>(R.id.btnLevelsBack).text = I18n.t("back")
+        findViewById<TextView>(R.id.settingsTitle).text = I18n.t("settings")
+        findViewById<TextView>(R.id.settingsVolume).text = I18n.t("volume")
+        findViewById<TextView>(R.id.settingsLanguage).text = I18n.t("language")
+        findViewById<Button>(R.id.btnSettingsBack).text = I18n.t("back")
+        findViewById<TextView>(R.id.pauseTitle).text = I18n.t("paused")
+        findViewById<Button>(R.id.btnResume).text = I18n.t("resume")
+        findViewById<Button>(R.id.btnPauseExit).text = I18n.t("menu")
+        findViewById<TextView>(R.id.winEyebrow).text = I18n.t("bannerYours")
+        findViewById<TextView>(R.id.winTitle).text = I18n.t("youWin")
+        findViewById<Button>(R.id.btnNextYes).text = I18n.t("nextYes")
+        findViewById<Button>(R.id.btnNextNo).text = I18n.t("nextNo")
+        findViewById<TextView>(R.id.deadEyebrow).text = I18n.t("torchOut")
+        findViewById<TextView>(R.id.deadTitle).text = I18n.t("gameOver")
+        findViewById<Button>(R.id.btnRestart).text = I18n.t("restart")
+        findViewById<Button>(R.id.btnDeadExit).text = I18n.t("menu")
+        hudLevel.text = I18n.levelTitle(game.engine.levelId)
+        languageSpinner.setSelection(I18n.indexOf(I18n.lang), false)
+        applyingLang = false
     }
 
     private fun showLevels() {
@@ -213,7 +270,7 @@ class MainActivity : AppCompatActivity(), GameView.Listener {
     }
 
     override fun onHud(hp: Int, mana: Int, coins: Int, phase: Phase, paused: Boolean, levelName: String) {
-        hudLevel.text = levelName
+        hudLevel.text = I18n.levelTitle(game.engine.levelId)
         for (i in 0 until hpRow.childCount) {
             val d = GradientDrawable()
             d.setColor(if (i < hp) Color.parseColor("#C45A48") else Color.parseColor("#2A2118"))
@@ -236,12 +293,12 @@ class MainActivity : AppCompatActivity(), GameView.Listener {
         winXp.text = "+$WIN_XP XP    total ${save.xp}"
         val hasNext = game.engine.levelId < LEVEL_COUNT
         winHint.text = if (hasNext) {
-            "Next hall: ${LEVEL_NAMES[game.engine.levelId]}. Continue?"
+            I18n.fill("nextHall", mapOf("name" to I18n.levelTitle(game.engine.levelId + 1)))
         } else {
-            getString(R.string.night_yours)
+            I18n.t("nightYours")
         }
         btnNextYes.visibility = if (hasNext) View.VISIBLE else View.GONE
-        findViewById<Button>(R.id.btnNextNo).text = if (hasNext) getString(R.string.next_no) else getString(R.string.exit)
+        findViewById<Button>(R.id.btnNextNo).text = if (hasNext) I18n.t("nextNo") else I18n.t("menu")
         win.visibility = View.VISIBLE
     }
 

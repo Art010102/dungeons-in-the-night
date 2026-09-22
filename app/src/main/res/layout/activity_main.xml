@@ -185,6 +185,7 @@
         android:orientation="vertical"
         android:padding="28dp">
         <TextView
+            android:id="@+id/menuEyebrow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/eyebrow"
@@ -193,6 +194,7 @@
             android:letterSpacing="0.22"
             android:textSize="12sp" />
         <TextView
+            android:id="@+id/menuTitle1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -201,6 +203,7 @@
             android:textSize="42sp"
             android:textStyle="bold" />
         <TextView
+            android:id="@+id/menuTitle2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/title_line2"
@@ -208,6 +211,7 @@
             android:textSize="36sp"
             android:textStyle="bold" />
         <TextView
+            android:id="@+id/menuBlurb"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
@@ -219,7 +223,6 @@
         <Button android:id="@+id/btnStart" style="@style/BtnPrimary" android:layout_marginTop="32dp" android:text="@string/start_game" />
         <Button android:id="@+id/btnLevels" style="@style/BtnGhost" android:text="@string/select_level" />
         <Button android:id="@+id/btnSettings" style="@style/BtnGhost" android:text="@string/settings" />
-        <Button android:id="@+id/btnExit" style="@style/BtnGhost" android:text="@string/exit" />
         <TextView
             android:id="@+id/xpLabel"
             android:layout_width="wrap_content"
@@ -239,7 +242,7 @@
         android:orientation="vertical"
         android:padding="28dp"
         android:visibility="gone">
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        <TextView android:id="@+id/levelsTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:text="@string/select_level" android:textColor="@color/fg" android:textSize="32sp" android:textStyle="bold" />
         <Button android:id="@+id/btnL1" style="@style/BtnGhost" android:layout_marginTop="24dp" android:text="@string/level_1" />
         <Button android:id="@+id/btnL2" style="@style/BtnGhost" android:text="@string/level_2" />
@@ -257,9 +260,9 @@
         android:orientation="vertical"
         android:padding="28dp"
         android:visibility="gone">
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        <TextView android:id="@+id/settingsTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:text="@string/settings" android:textColor="@color/fg" android:textSize="32sp" android:textStyle="bold" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        <TextView android:id="@+id/settingsVolume" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:layout_marginTop="28dp" android:text="@string/volume" android:textAllCaps="true"
             android:textColor="@color/subtle" android:textSize="12sp" />
         <SeekBar
@@ -270,6 +273,17 @@
             android:max="100" />
         <TextView android:id="@+id/volumeValue" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:layout_marginTop="8dp" android:textColor="@color/muted" />
+        <TextView android:id="@+id/settingsLanguage" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="24dp" android:text="@string/language" android:textAllCaps="true"
+            android:textColor="@color/subtle" android:textSize="12sp" />
+        <Spinner
+            android:id="@+id/languageSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/btn_ghost"
+            android:popupBackground="@color/surface_solid"
+            android:spinnerMode="dropdown" />
         <Button android:id="@+id/btnSettingsBack" style="@style/BtnGhost" android:layout_marginTop="24dp" android:text="@string/back" />
     </LinearLayout>
 
@@ -285,7 +299,7 @@
         android:visibility="gone">
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
             android:background="@drawable/panel" android:orientation="vertical" android:padding="24dp">
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            <TextView android:id="@+id/pauseTitle" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:gravity="center" android:text="@string/paused" android:textColor="@color/fg" android:textSize="32sp" android:textStyle="bold" />
             <Button android:id="@+id/btnResume" style="@style/BtnPrimary" android:layout_marginTop="24dp" android:text="@string/resume" />
             <Button android:id="@+id/btnPauseExit" style="@style/BtnGhost" android:text="@string/exit" />
@@ -304,9 +318,9 @@
         android:visibility="gone">
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
             android:background="@drawable/panel" android:orientation="vertical" android:padding="24dp">
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            <TextView android:id="@+id/winEyebrow" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:gravity="center" android:text="@string/banner_yours" android:textAllCaps="true" android:textColor="@color/gold" android:textSize="12sp" />
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            <TextView android:id="@+id/winTitle" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:gravity="center" android:layout_marginTop="6dp" android:text="@string/you_win" android:textColor="@color/fg" android:textSize="36sp" android:textStyle="bold" />
             <TextView android:id="@+id/winXp" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:gravity="center" android:layout_marginTop="12dp" android:textColor="@color/fg" android:textSize="22sp" />
@@ -329,9 +343,9 @@
         android:visibility="gone">
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
             android:background="@drawable/panel" android:orientation="vertical" android:padding="24dp">
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            <TextView android:id="@+id/deadEyebrow" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:gravity="center" android:text="@string/torch_out" android:textAllCaps="true" android:textColor="@color/subtle" android:textSize="12sp" />
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            <TextView android:id="@+id/deadTitle" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:gravity="center" android:layout_marginTop="6dp" android:text="@string/game_over" android:textColor="@color/fg" android:textSize="36sp" android:textStyle="bold" />
             <Button android:id="@+id/btnRestart" style="@style/BtnPrimary" android:layout_marginTop="24dp" android:text="@string/restart" />
             <Button android:id="@+id/btnDeadExit" style="@style/BtnGhost" android:text="@string/exit" />

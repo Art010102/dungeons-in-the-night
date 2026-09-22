@@ -620,12 +620,12 @@ class Engine(var levelId: Int = 1) {
             when (item.kind) {
                 "heal" -> {
                     p.hp = PLAYER_MAX_HP
-                    floaters.add(Floater().also { it.text = "HP restored"; it.x = cx; it.y = cy; it.t = 1.2f })
+                    floaters.add(Floater().also { it.text = I18n.t("hpRestored"); it.x = cx; it.y = cy; it.t = 1.2f })
                     emit(GameEvent.Heal(cx, cy))
                 }
                 "mana" -> {
                     p.mana = PLAYER_MAX_MANA
-                    floaters.add(Floater().also { it.text = "Mana restored"; it.x = cx; it.y = cy; it.t = 1.2f })
+                    floaters.add(Floater().also { it.text = I18n.t("manaRestored"); it.x = cx; it.y = cy; it.t = 1.2f })
                     emit(GameEvent.Mana(cx, cy))
                 }
                 else -> {

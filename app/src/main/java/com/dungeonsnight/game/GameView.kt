@@ -9,6 +9,7 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
 import android.util.AttributeSet
+import androidx.core.content.res.ResourcesCompat
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import kotlin.math.abs
@@ -388,9 +389,10 @@ class GameView @JvmOverloads constructor(
 
     private fun drawFloaters(canvas: Canvas) {
         val text = Paint(Paint.ANTI_ALIAS_FLAG)
-        text.color = Color.parseColor("#EFE6D8")
+        text.color = Color.parseColor("#F0D7A0")
         text.textSize = 8f
         text.textAlign = Paint.Align.CENTER
+        ResourcesCompat.getFont(context, R.font.cinzel_semibold)?.let { text.typeface = it }
         for (f in engine.floaters) {
             text.alpha = (255f * min(1f, f.t * 1.4f)).toInt().coerceIn(0, 255)
             canvas.drawText(f.text, f.x, f.y, text)

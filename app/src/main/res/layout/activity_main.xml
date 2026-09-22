@@ -176,116 +176,201 @@
     </FrameLayout>
 
     <!-- Menu -->
-    <LinearLayout
+    <FrameLayout
         android:id="@+id/menuOverlay"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/bg"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="28dp">
-        <TextView
-            android:id="@+id/menuEyebrow"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/eyebrow"
-            android:textAllCaps="true"
-            android:textColor="@color/gold"
-            android:letterSpacing="0.22"
-            android:textSize="12sp" />
-        <TextView
-            android:id="@+id/menuTitle1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/title_line1"
-            android:textColor="@color/fg"
-            android:textSize="42sp"
-            android:textStyle="bold" />
-        <TextView
-            android:id="@+id/menuTitle2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/title_line2"
-            android:textColor="@color/muted"
-            android:textSize="36sp"
-            android:textStyle="bold" />
-        <TextView
-            android:id="@+id/menuBlurb"
+        android:layout_height="match_parent">
+        <ImageView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
+            android:src="@drawable/title_night" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#4D120E0C" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:gravity="center"
-            android:maxWidth="320dp"
-            android:text="@string/blurb"
-            android:textColor="@color/muted"
-            android:textSize="14sp" />
-        <Button android:id="@+id/btnStart" style="@style/BtnPrimary" android:layout_marginTop="32dp" android:text="@string/start_game" />
-        <Button android:id="@+id/btnLevels" style="@style/BtnGhost" android:text="@string/select_level" />
-        <Button android:id="@+id/btnSettings" style="@style/BtnGhost" android:text="@string/settings" />
-        <TextView
-            android:id="@+id/xpLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:textColor="@color/fg"
-            android:textSize="16sp" />
-    </LinearLayout>
+            android:orientation="vertical"
+            android:padding="28dp">
+            <TextView
+                android:id="@+id/menuEyebrow"
+                style="@style/TitleCarved"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.28"
+                android:text="@string/eyebrow"
+                android:textAllCaps="true"
+                android:textColor="@color/gold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/menuTitle1"
+                style="@style/TitleCarved"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/title_line1"
+                android:textColor="@color/fg"
+                android:textSize="44sp" />
+            <TextView
+                android:id="@+id/menuTitle2"
+                style="@style/TitleCarved"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/title_line2"
+                android:textColor="@color/muted"
+                android:textSize="34sp" />
+            <TextView
+                android:id="@+id/menuBlurb"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:fontFamily="@font/cinzel"
+                android:gravity="center"
+                android:maxWidth="340dp"
+                android:shadowColor="#CC000000"
+                android:shadowDx="0"
+                android:shadowDy="2"
+                android:shadowRadius="6"
+                android:text="@string/blurb"
+                android:textColor="@color/fg"
+                android:textSize="13sp" />
+            <Button android:id="@+id/btnStart" style="@style/BtnPrimary" android:layout_marginTop="28dp" android:text="@string/start_game" />
+            <Button android:id="@+id/btnLevels" style="@style/BtnGhost" android:text="@string/select_level" />
+            <Button android:id="@+id/btnSettings" style="@style/BtnGhost" android:text="@string/settings" />
+            <TextView
+                android:id="@+id/xpLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:fontFamily="@font/cinzel"
+                android:shadowColor="#CC000000"
+                android:shadowDx="0"
+                android:shadowDy="2"
+                android:shadowRadius="4"
+                android:textColor="@color/gold"
+                android:textSize="15sp" />
+        </LinearLayout>
+    </FrameLayout>
 
     <!-- Levels -->
-    <LinearLayout
+    <FrameLayout
         android:id="@+id/levelsOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/bg"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="28dp"
         android:visibility="gone">
-        <TextView android:id="@+id/levelsTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="@string/select_level" android:textColor="@color/fg" android:textSize="32sp" android:textStyle="bold" />
-        <Button android:id="@+id/btnL1" style="@style/BtnGhost" android:layout_marginTop="24dp" android:text="@string/level_1" />
-        <Button android:id="@+id/btnL2" style="@style/BtnGhost" android:text="@string/level_2" />
-        <Button android:id="@+id/btnL3" style="@style/BtnGhost" android:text="@string/level_3" />
-        <Button android:id="@+id/btnLevelsBack" style="@style/BtnGhost" android:text="@string/back" />
-    </LinearLayout>
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
+            android:src="@drawable/title_night" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#4D120E0C" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="28dp">
+            <TextView
+                android:id="@+id/levelsTitle"
+                style="@style/TitleCarved"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/select_level"
+                android:textAllCaps="true"
+                android:textColor="@color/fg"
+                android:textSize="30sp" />
+            <Button android:id="@+id/btnL1" style="@style/BtnGhost" android:layout_marginTop="24dp" android:text="@string/level_1" />
+            <Button android:id="@+id/btnL2" style="@style/BtnGhost" android:text="@string/level_2" />
+            <Button android:id="@+id/btnL3" style="@style/BtnGhost" android:text="@string/level_3" />
+            <Button android:id="@+id/btnLevelsBack" style="@style/BtnGhost" android:text="@string/back" />
+        </LinearLayout>
+    </FrameLayout>
 
     <!-- Settings -->
-    <LinearLayout
+    <FrameLayout
         android:id="@+id/settingsOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/bg"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="28dp"
         android:visibility="gone">
-        <TextView android:id="@+id/settingsTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="@string/settings" android:textColor="@color/fg" android:textSize="32sp" android:textStyle="bold" />
-        <TextView android:id="@+id/settingsVolume" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:layout_marginTop="28dp" android:text="@string/volume" android:textAllCaps="true"
-            android:textColor="@color/subtle" android:textSize="12sp" />
-        <SeekBar
-            android:id="@+id/volumeBar"
+        <ImageView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:max="100" />
-        <TextView android:id="@+id/volumeValue" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:layout_marginTop="8dp" android:textColor="@color/muted" />
-        <TextView android:id="@+id/settingsLanguage" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:layout_marginTop="24dp" android:text="@string/language" android:textAllCaps="true"
-            android:textColor="@color/subtle" android:textSize="12sp" />
-        <Spinner
-            android:id="@+id/languageSpinner"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
+            android:src="@drawable/title_night" />
+        <View
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/btn_ghost"
-            android:popupBackground="@color/surface_solid"
-            android:spinnerMode="dropdown" />
-        <Button android:id="@+id/btnSettingsBack" style="@style/BtnGhost" android:layout_marginTop="24dp" android:text="@string/back" />
-    </LinearLayout>
+            android:layout_height="match_parent"
+            android:background="#4D120E0C" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="28dp">
+            <TextView
+                android:id="@+id/settingsTitle"
+                style="@style/TitleCarved"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings"
+                android:textAllCaps="true"
+                android:textColor="@color/fg"
+                android:textSize="30sp" />
+            <TextView
+                android:id="@+id/settingsVolume"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:fontFamily="@font/cinzel"
+                android:letterSpacing="0.18"
+                android:text="@string/volume"
+                android:textAllCaps="true"
+                android:textColor="@color/gold"
+                android:textSize="12sp" />
+            <SeekBar
+                android:id="@+id/volumeBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:max="100" />
+            <TextView
+                android:id="@+id/volumeValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/cinzel"
+                android:textColor="@color/muted" />
+            <TextView
+                android:id="@+id/settingsLanguage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/cinzel"
+                android:letterSpacing="0.18"
+                android:text="@string/language"
+                android:textAllCaps="true"
+                android:textColor="@color/gold"
+                android:textSize="12sp" />
+            <Spinner
+                android:id="@+id/languageSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="58dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/btn_ghost"
+                android:popupBackground="@color/surface_solid"
+                android:spinnerMode="dropdown" />
+            <Button android:id="@+id/btnSettingsBack" style="@style/BtnGhost" android:layout_marginTop="24dp" android:text="@string/back" />
+        </LinearLayout>
+    </FrameLayout>
 
     <!-- Pause -->
     <LinearLayout

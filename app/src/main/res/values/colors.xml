@@ -7,6 +7,8 @@
     <color name="muted">#FFC4B8A5</color>
     <color name="subtle">#FF8A7A68</color>
     <color name="gold">#FFD4A574</color>
+    <color name="carved">#FFE6D3B0</color>
+    <color name="carved_gold">#FFF0D7A0</color>
     <color name="accent_fg">#FF120E0C</color>
     <color name="border">#24EFE6D8</color>
     <color name="hp">#FFC45A48</color>
